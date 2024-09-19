@@ -7,10 +7,10 @@ import { UserService } from "./services/user.service";
 import { User } from "./interfaces/user.interface";
 @Controller('users')
 export class UserController {
-    // constructor(private userService: UserService, private adminService: AdminService, private clientService: ClientService) {}
+    constructor(private readonly userService: UserService) {}
 
     @Post('login')
-    login(@Body userData: User): string {
+    login(@Body() userData: User): string {
         return this.userService.login(userData);
     }
 }
