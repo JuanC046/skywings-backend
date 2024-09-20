@@ -1,4 +1,4 @@
-export interface Root {
+export interface Credentials {
     username: string;
     password: string;
 }

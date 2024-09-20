@@ -1,28 +1,22 @@
 import { Controller, Post, Body } from "@nestjs/common";
-import { UserService } from "./services/user.service";
+import { UserService } from "./user.service";
+import { Credentials } from "./interfaces/credentials.interface";
 import { User } from "./interfaces/user.interface";
-import { ClientService } from "./services/client.service";
-import { Client } from "./interfaces/client.interface";
-import { AdminService } from "./services/admin.service";
-import { Admin } from "./interfaces/admin.interface";
 @Controller('users')
 export class UserController {
-    constructor(private readonly userService: UserService, 
-        private readonly clientService: ClientService,
-        private readonly adminService: AdminService
-    ) {}
+    constructor(private readonly userService: UserService) {}
 
     @Post('login')
-    login(@Body() userData: User): string {
-        return this.userService.login(userData);
+    login(@Body() credentials: Credentials): string {
+        return this.userService.login(credentials);
     }
     @Post('singup')
-    singup(@Body() userData: Client): string {
-        return this.clientService.create(userData);
+    singup(@Body() userData: User): string {
+        return this.userService.register(userData);
     }
     @Post('newadmin')
-    newadmin(@Body() userData: Admin): string {
-        return this.adminService.create(userData);
+    newadmin(@Body() userData: User): string {
+        return this.userService.createAdmin(userData);
     }
 
 }
