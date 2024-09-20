@@ -24,7 +24,8 @@ model User {
   surname1           String?
   surname2           String?
   gender             String?
-  birthdate          DateTime?
+  birthPlace         String?
+  birthDate          DateTime?
   image              String?
   erased             Boolean  @default(false)
 
