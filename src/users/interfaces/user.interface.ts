@@ -9,6 +9,7 @@ export interface User {
   email: string;
   gender: string;
   address: string;
-  birthplace: string;
+  birthPlace: string;
+  birthDate: Date;
   user_image: string;
 }
