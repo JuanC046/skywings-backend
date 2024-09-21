@@ -1,0 +1,136 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  username           String   @id @unique
+  role               String   @default("USER")
+  email              String   @unique
+  password           String
+  dni                String?  @unique
+  name1              String?
+  name2              String?
+  surname1           String?
+  surname2           String?
+  gender             String?
+  birthPlace         String?
+  birthDate          DateTime?
+  image              String?
+  erased             Boolean  @default(false)
+
+  flight flight[]
+  cards cards[]
+  tickets ticket[]
+  purchases purchases[]
+}
+
+model passenger {
+  dni                String  @id @unique
+  name1              String
+  name2              String
+  surname1           String
+  surname2           String
+  birthdate          DateTime
+  gender             String
+  phone              String
+  email              String
+  contactName        String
+  contactPhone       String
+  erased             Boolean  @default(false)
+
+  ticket ticket[]
+}
+
+model flight {
+  code               String   @id @unique
+  flightCreator      User     @relation(fields: [creator], references: [username])
+  creator            String
+  departureDate      DateTime
+  origin             String
+  destination        String
+  arrivalDate        DateTime
+  creationDate       DateTime
+  lastUpdateDate     DateTime
+  erased             Boolean  @default(false)
+
+  tickets ticket[]
+  seats seats[]
+}
+
+model seats {
+  flight            flight   @relation(fields: [flightCode], references: [code])
+  flightCode        String   @id
+  totalSeats        Int
+  totalFirst        Int
+  totalTourist      Int
+  avaliableFirst    String
+  avaliableTourist  String
+  busyFirst         String
+  busyTourist       String
+  erased            Boolean  @default(false)
+}
+
+model ticket {
+  flight            flight   @relation(fields: [flightCode], references: [code])
+  flightCode        String
+  user              User     @relation(fields: [username], references: [username])
+  username          String
+  passenger         passenger @relation(fields: [passengerDni], references: [dni])
+  passengerDni      String
+  purchase          purchases @relation(fields: [purchaseId], references: [id])
+  purchaseId        Int @default(0)
+  seatNumber        String
+  price             Float
+  checkIn           DateTime
+  numSuitcase       Int
+  erased            Boolean  @default(false)
+
+  @@id([flightCode, passengerDni])
+}
+
+model cards {
+  number              String  @id @unique
+  user                User    @relation(fields: [propietary], references: [dni])
+  propietary          String
+  expirationDate      DateTime
+  cvv                 String
+  balance             Int
+  type                String
+  erased              Boolean  @default(false)
+
+  payments payments[]
+}
+
+model payments {
+  id                  Int      @id @default(autoincrement())
+  card                cards    @relation(fields: [cardNumber], references: [number])
+  cardNumber          String
+  total               Int
+  fees                Int?
+  status              String
+
+  purchases purchases[]
+}
+
+model purchases {
+  id                  Int      @id @default(autoincrement())
+  user                User     @relation(fields: [username], references: [username])
+  username            String
+  payment             payments @relation(fields: [paymentId], references: [id])
+  paymentId           Int
+  creationDate        DateTime
+  status              String
+
+  ticket ticket[]
+}
