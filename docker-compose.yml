@@ -7,9 +7,17 @@ services:
       POSTGRES_PASSWORD: spu0987
       POSTGRES_DB: skywingsdb
     ports:
-      - "5432:5432"
-#     volumes:
-#       - postgres_data:/var/lib/postgresql/data
+      - "3030:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
-# volumes:
-#   postgres_data:
+  adminer:
+      image: adminer
+      container_name: adminer
+      environment:
+        ADMINER_DEFAULT_SERVER: db
+      ports:
+        - "8080:8080"
+
+volumes:
+  postgres_data:

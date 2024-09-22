@@ -16,7 +16,7 @@ datasource db {
 model User {
   username           String   @id @unique
   role               String   @default("USER")
-  email              String   @unique
+  email              String?   @unique
   password           String
   dni                String?  @unique
   name1              String?
@@ -24,6 +24,7 @@ model User {
   surname1           String?
   surname2           String?
   gender             String?
+  address            String?
   birthPlace         String?
   birthDate          DateTime?
   image              String?

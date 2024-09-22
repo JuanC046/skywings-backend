@@ -2,7 +2,7 @@
 CREATE TABLE "User" (
     "username" TEXT NOT NULL,
     "role" TEXT NOT NULL DEFAULT 'USER',
-    "email" TEXT NOT NULL,
+    "email" TEXT,
     "password" TEXT NOT NULL,
     "dni" TEXT,
     "name1" TEXT,
@@ -10,6 +10,7 @@ CREATE TABLE "User" (
     "surname1" TEXT,
     "surname2" TEXT,
     "gender" TEXT,
+    "address" TEXT,
     "birthPlace" TEXT,
     "birthDate" TIMESTAMP(3),
     "image" TEXT,
