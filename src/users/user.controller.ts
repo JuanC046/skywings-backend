@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Put } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Patch } from '@nestjs/common';
 import { UserService } from './user.service';
 import { Credentials } from './interfaces/credentials.interface';
 import { User } from './interfaces/user.interface';
@@ -7,10 +7,15 @@ import { User } from './interfaces/user.interface';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @Post('login')
-  async login(@Body() credentials: Credentials): Promise<any> {
-    return this.userService.login(credentials);
+  @Get()
+  async findAllUsers(): Promise<any> {
+    return this.userService.findAllUsers();
   }
+
+  // @Post('login')
+  // async login(@Body() credentials: Credentials): Promise<any> {
+  //   return this.userService.login(credentials);
+  // }
 
   @Post('signup')
   async signup(@Body() userData: User): Promise<any> {
@@ -23,18 +28,19 @@ export class UserController {
     return this.userService.createAdmin(userData);
   }
 
-  @Put('updatepassword')
+  //Se utiliza Patch en lugar de Put debido a que es una actualización parcial, un solo campo
+  @Patch('updatepassword')
   async updatePassword(@Body() userData: Credentials): Promise<any> {
     return this.userService.changePassword(userData);
   }
-  
+
   @Put('updateuser')
   async updateUser(@Body() userData: User): Promise<any> {
     return this.userService.updateData(userData);
   }
 
-  @Post('getuser')
-  async getUser(@Body() username: Credentials): Promise<any> {
+  @Get('getuser')
+  async getUser(@Body() username: string): Promise<any> {
     return this.userService.findUser(username);
   }
 }
