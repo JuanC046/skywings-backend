@@ -2,7 +2,7 @@
 CREATE TABLE "User" (
     "username" TEXT NOT NULL,
     "role" TEXT NOT NULL DEFAULT 'USER',
-    "email" TEXT,
+    "email" TEXT NOT NULL,
     "password" TEXT NOT NULL,
     "dni" TEXT,
     "name1" TEXT,

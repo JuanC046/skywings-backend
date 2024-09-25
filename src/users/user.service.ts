@@ -53,7 +53,7 @@ export class UserService {
   // }
 
   async createAdmin(user: Credentials): Promise<any> {
-    const { username, password } = user;
+    const { username, email, password } = user;
 
     // Verificar si el username ya existe
     const existingUser = await this.prisma.user.findFirst({
@@ -64,6 +64,14 @@ export class UserService {
       throw new HttpException('Username already in use', 409);
     }
 
+    // Verificar si el email ya existe
+    const existingEmail = await this.prisma.user.findFirst({
+      where: { email },
+    });
+    if (existingEmail) {
+      throw new HttpException('Email already in use', 409);
+    }
+
     // Encriptar la contraseña
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -71,6 +79,7 @@ export class UserService {
     const newUser = await this.prisma.user.create({
       data: {
         username,
+        email,
         password: hashedPassword,
         role: 'ADMIN',
       },
@@ -234,4 +243,22 @@ export class UserService {
     console.log(user.role);
     return response;
   }
+
+  async delete(username: string): Promise<any> {
+    const user = await this.prisma.user.findUnique({
+      where: { username: username },
+    });
+    if (!user) {
+      throw new HttpException('User not found', 404);
+    }
+    const deletedUser = await this.prisma.user.update({
+      where: { username: username },
+      data: { erased: true },
+    });
+    return {
+      username: deletedUser.username,
+      email: deletedUser.email,
+    };
+  }
 }
+
