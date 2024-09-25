@@ -8,8 +8,6 @@ import { JwtModule, JwtService } from '@nestjs/jwt';
   imports: [
     JwtModule.register({
       global: true,
-      secret: process.env.JWT_SECRET,
-      signOptions: { expiresIn: '180s' },
     }),
   ],
   providers: [AuthService, PrismaService, JwtService],

@@ -41,12 +41,14 @@ export class AuthService {
     const payload = {
       username: user.username,
       email: user.email,
+      // role: await hash(user.role, 10),
       role: user.role,
     };
 
     return {
       access_token: await this.jwtService.signAsync(payload, {
         secret: process.env.JWT_SECRET,
+        expiresIn: '1m',
       }),
     };
   }

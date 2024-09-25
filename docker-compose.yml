@@ -15,6 +15,9 @@ services:
       image: adminer
       container_name: adminer
       environment:
-        ADMINER_DEFAULT_SERVER: db
+        ADMINER_DEFAULT_SERVER: skywingsdb
       ports:
         - "8080:8080"
+
+volumes:
+  postgres_data:
