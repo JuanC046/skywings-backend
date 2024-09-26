@@ -13,6 +13,12 @@ export class UserService {
     return this.prisma.user.findMany();
   }
 
+  async findAdmins() {
+    return this.prisma.user.findMany({
+      where: { role: 'ADMIN', erased: false },
+    });
+  }
+
   // async login(credentials: Credentials): Promise<any> {
   //   const { username, password } = credentials;
 
@@ -199,4 +205,3 @@ export class UserService {
     };
   }
 }
-

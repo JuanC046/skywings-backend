@@ -54,6 +54,7 @@ export class AuthService {
         secret: process.env.JWT_SECRET,
         expiresIn: '10m',
       }),
+      role: user.role,
     };
   }
 

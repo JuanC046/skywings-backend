@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Put, Patch, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Put,
+  Patch,
+  Delete,
+  UseGuards,
+} from '@nestjs/common';
 import { UserService } from './user.service';
 import { Credentials } from './interfaces/credentials.interface';
 import { User } from './interfaces/user.interface';
@@ -15,6 +24,11 @@ export class UserController {
   @Get()
   async findAllUsers(): Promise<any> {
     return this.userService.findAllUsers();
+  }
+
+  @Get('admins')
+  async findAdmins(): Promise<any> {
+    return this.userService.findAdmins();
   }
 
   @Post('newadmin')
