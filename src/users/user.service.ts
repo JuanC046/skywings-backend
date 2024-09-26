@@ -91,68 +91,6 @@ export class UserService {
     };
   }
 
-  async register(userData: User): Promise<any> {
-    const {
-      username,
-      password,
-      dni,
-      name1,
-      name2,
-      surname1,
-      surname2,
-      email,
-      gender,
-      address,
-      birthPlace,
-      birthDate,
-      user_image,
-    } = userData;
-
-    // Verificar si el username o email ya existen
-    try {
-      const existingUser = await this.prisma.user.findFirst({
-        where: {
-          OR: [{ username }, { email }, { dni }],
-        },
-      });
-
-      if (existingUser) {
-        throw new HttpException('Username, email, or dni already in use', 409);
-      }
-    } catch (error) {
-      error.message = 'Error checking for existing user';
-    }
-
-    // Encriptar la contraseña
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Crear nuevo usuario
-    const newUser = await this.prisma.user.create({
-      data: {
-        username,
-        password: hashedPassword,
-        dni,
-        name1,
-        name2,
-        surname1,
-        surname2,
-        email,
-        gender,
-        address,
-        birthPlace,
-        birthDate: birthDate ? new Date(birthDate) : null,
-        image: user_image,
-        // El rol se deja como valor por defecto ("USER"), y no es necesario pasarlo explícitamente.
-      },
-    });
-
-    return {
-      username: newUser.username,
-      email: newUser.email,
-      role: newUser.role,
-    };
-  }
-
   async changePassword(userData: Credentials): Promise<any> {
     const { username, password } = userData;
     const user = await this.prisma.user.findUnique({

@@ -2,25 +2,19 @@ import { Controller, Get, Post, Body, Put, Patch, Delete } from '@nestjs/common'
 import { UserService } from './user.service';
 import { Credentials } from './interfaces/credentials.interface';
 import { User } from './interfaces/user.interface';
+import { ApiTags } from '@nestjs/swagger';
+import { AuthGuard } from 'src/auth/guard/auth.guard';
+import { RolesGuard } from 'src/auth/guard/auth.roles.guard';
 
+@ApiTags('Users Module')
 @Controller('users')
+@UseGuards(AuthGuard, RolesGuard)
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get()
   async findAllUsers(): Promise<any> {
     return this.userService.findAllUsers();
-  }
-
-  // @Post('login')
-  // async login(@Body() credentials: Credentials): Promise<any> {
-  //   return this.userService.login(credentials);
-  // }
-
-  @Post('signup')
-  async signup(@Body() userData: User): Promise<any> {
-    console.log(userData);
-    return this.userService.register(userData);
   }
 
   @Post('newadmin')
