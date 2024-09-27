@@ -4,7 +4,6 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  console.log('Server is running on http://localhost:4000');
   const config = new DocumentBuilder()
     .setTitle('Skywings API')
     .setDescription('The Skywings API description')
@@ -12,6 +11,9 @@ async function bootstrap() {
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
-  await app.listen(4000);
+  const port = process.env.PORT || 4000;
+  const ip = process.env.IP || 'localhost';
+  console.log(`Server is running on http://${ip}:${port}/api`);
+  await app.listen(port, ip);
 }
 bootstrap();
