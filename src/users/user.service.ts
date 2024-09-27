@@ -1,9 +1,8 @@
 import { Injectable, HttpException } from '@nestjs/common';
-import { Credentials } from './interfaces/credentials.interface';
+import { Credentials, UserName } from './interfaces/credentials.interface';
 import { User } from './interfaces/user.interface';
 import { PrismaService } from '../prisma.service';
 import * as bcrypt from 'bcrypt';
-//Revisar address en el modelo data, ya que puede presentar errores
 
 @Injectable()
 export class UserService {
@@ -18,45 +17,6 @@ export class UserService {
       where: { role: 'ADMIN', erased: false },
     });
   }
-
-  // async login(credentials: Credentials): Promise<any> {
-  //   const { username, password } = credentials;
-
-  //   // 1. Buscar el usuario por username
-  //   const user = await this.prisma.user.findUnique({
-  //     where: { username: username },
-  //   });
-
-  //   // 2. Verificar que el usuario exista
-  //   if (!user) {
-  //     throw new HttpException('Invalid credentials', 401);
-  //   }
-
-  //   // 3. Verificar que el usuario no esté marcado como "erased"
-  //   if (user.erased) {
-  //     throw new HttpException('This user is no longer active', 401);
-  //   }
-
-  //   // 4. Verificar la contraseña
-  //   // Validar si la contraseña está encriptada
-  //   let hashedPassword = user.password;
-  //   if (!user.password.startsWith('$2b$')) {
-  //     hashedPassword = await bcrypt.hash(user.password, 10);
-  //   }
-  //   const isPasswordValid = await bcrypt.compare(password, hashedPassword);
-
-  //   if (!isPasswordValid) {
-  //     throw new HttpException('Invalid credentials', 401);
-  //   }
-
-  //   // Si todo es correcto, devolver el usuario por ahora
-  //   return {
-  //     username: user.username,
-  //     email: user.email,
-  //     role: user.role,
-  //     user_image: user.image,
-  //   };
-  // }
 
   async createAdmin(user: Credentials): Promise<any> {
     const { username, email, password } = user;
@@ -160,11 +120,12 @@ export class UserService {
     };
   }
 
-  async findUser(username: string): Promise<User> {
-    // const { username } = userData;
+  async findUser(username: UserName): Promise<User> {
+    console.log('User maybe -> ', username);
     const user = await this.prisma.user.findUnique({
-      where: { username: username.toString() },
+      where: { username: username.username },
     });
+    console.log(user);
     if (!user) {
       throw new HttpException('User not found', 404);
     }
@@ -184,19 +145,18 @@ export class UserService {
       birthDate: new Date(user.birthDate) || null,
       user_image: user.image || '',
     };
-    console.log(user.role);
     return response;
   }
 
-  async delete(username: string): Promise<any> {
+  async delete(username: UserName): Promise<any> {
     const user = await this.prisma.user.findUnique({
-      where: { username: username },
+      where: { username: username.username },
     });
     if (!user) {
       throw new HttpException('User not found', 404);
     }
     const deletedUser = await this.prisma.user.update({
-      where: { username: username },
+      where: { username: username.username },
       data: { erased: true },
     });
     return {

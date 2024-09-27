@@ -9,7 +9,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { Credentials } from './interfaces/credentials.interface';
+import { Credentials, UserName } from './interfaces/credentials.interface';
 import { User } from './interfaces/user.interface';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/guard/auth.guard';
@@ -48,12 +48,12 @@ export class UserController {
   }
 
   @Get('getuser')
-  async getUser(@Body() username: string): Promise<any> {
+  async getUser(@Body() username: UserName): Promise<any> {
     return this.userService.findUser(username);
   }
 
   @Delete('deleteadmin')
-  async deleteAdmin(@Body() username: string): Promise<any> {
+  async deleteAdmin(@Body() username: UserName): Promise<any> {
     return this.userService.delete(username);
   }
 }
