@@ -1,5 +1,9 @@
 import { Injectable, HttpException } from '@nestjs/common';
-import { Credentials, UserName } from './interfaces/credentials.interface';
+import {
+  Credentials,
+  UserName,
+  PasswordChange,
+} from './interfaces/credentials.interface';
 import { User } from './interfaces/user.interface';
 import { PrismaService } from '../prisma.service';
 import { ValidationService } from '../validation/validation.service';
@@ -23,9 +27,8 @@ export class UserService {
   }
 
   async createAdmin(user: Credentials): Promise<any> {
-    if ((await this.validationUser.validateCredentials(user)) !== true) {
-      return;
-    }
+    await this.validationUser.validateCredentials(user);
+
     const { username, email, password } = user;
 
     // Verificar si el username ya existe
@@ -64,19 +67,32 @@ export class UserService {
     };
   }
 
-  async changePassword(userData: Credentials): Promise<any> {
-    const { username, password } = userData;
+  async changePassword(userData: PasswordChange): Promise<any> {
+    const { username, currentPassword, newPassword } = userData;
     const user = await this.prisma.user.findUnique({
       where: { username: username },
     });
+    // Verificar si el usuario existe
     if (!user) {
       throw new HttpException('Usuario no encontrado', 404);
     }
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Verificar si la contraseña actual es correcta
+    const validPassword = await bcrypt.compare(currentPassword, user.password);
+    if (!validPassword) {
+      throw new HttpException(
+        'La contraseña actual ingresada es incorrecta',
+        400,
+      );
+    }
+    // Validar la nueva contraseña
+    this.validationUser.validatePasswordChange(newPassword);
+    // Encriptar la nueva contraseña y actualizarla
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
     await this.prisma.user.update({
       where: { username: username },
       data: { password: hashedPassword },
     });
+
     return true;
   }
 
@@ -96,9 +112,13 @@ export class UserService {
     const user = await this.prisma.user.findUnique({
       where: { username: username },
     });
+    // Verificar si el usuario existe
     if (!user) {
       throw new HttpException('Usuario no encontrado', 404);
     }
+    // Validar los datos del enviados por el usuario
+    await this.validationUser.validateUserData(userData);
+    // Actualizar los datos del usuario
     const updatedUser = await this.prisma.user.update({
       where: { username: username },
       data: {

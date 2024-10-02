@@ -61,9 +61,7 @@ export class AuthService {
   }
 
   async register(userData: User): Promise<any> {
-    if ((await this.validationUser.validateUserData(userData)) !== true) {
-      return;
-    }
+    await this.validationUser.validateUserData(userData);
     const {
       username,
       password,

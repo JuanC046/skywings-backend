@@ -9,7 +9,11 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { Credentials, UserName } from './interfaces/credentials.interface';
+import {
+  Credentials,
+  PasswordChange,
+  UserName,
+} from './interfaces/credentials.interface';
 import { User } from './interfaces/user.interface';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/guard/auth.guard';
@@ -38,7 +42,7 @@ export class UserController {
 
   //Se utiliza Patch en lugar de Put debido a que es una actualización parcial, un solo campo
   @Patch('updatepassword')
-  async updatePassword(@Body() userData: Credentials): Promise<any> {
+  async updatePassword(@Body() userData: PasswordChange): Promise<any> {
     return this.userService.changePassword(userData);
   }
 

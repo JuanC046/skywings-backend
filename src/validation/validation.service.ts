@@ -65,7 +65,7 @@ export class ValidationService {
   async validateCredentials(user: Credentials): Promise<any> {
     const { username, email, password } = user;
     const errors: string[] = [];
-    
+
     // Validaciones
     Validator.validateStringLength(
       username,
@@ -112,4 +112,12 @@ export class ValidationService {
 
     return true;
   }
+  async validatePasswordChange(newPassword: string): Promise<any> {
+    const errors: string[] = [];
+    Validator.validateStringLength(newPassword, 8, 20, 'Contraseña', errors);
+    Validator.validateNoSpaces(newPassword, 'Contraseña', errors);
+    if (errors.length > 0) {
+      throw new HttpException(errors.join(', '), 400);
+    }
+    return true;
 }
