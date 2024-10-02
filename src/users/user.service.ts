@@ -2,7 +2,7 @@ import { Injectable, HttpException } from '@nestjs/common';
 import { Credentials, UserName } from './interfaces/credentials.interface';
 import { User } from './interfaces/user.interface';
 import { PrismaService } from '../prisma.service';
-import { ValidationService } from './validation/validation.service';
+import { ValidationService } from '../validation/validation.service';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
