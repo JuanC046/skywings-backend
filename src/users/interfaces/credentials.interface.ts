@@ -7,3 +7,9 @@ export interface Credentials {
 export interface UserName {
   username: string;
 }
+
+export interface PasswordChange {
+  username: string;
+  currentPassword: string;
+  newPassword: string;
+}
