@@ -2,11 +2,15 @@ import { Injectable, HttpException } from '@nestjs/common';
 import { Credentials, UserName } from './interfaces/credentials.interface';
 import { User } from './interfaces/user.interface';
 import { PrismaService } from '../prisma.service';
+import { ValidationService } from './validation/validation.service';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private validationUser: ValidationService,
+  ) {}
 
   async findAllUsers() {
     return this.prisma.user.findMany();
@@ -19,6 +23,9 @@ export class UserService {
   }
 
   async createAdmin(user: Credentials): Promise<any> {
+    if ((await this.validationUser.validateCredentials(user)) !== true) {
+      return;
+    }
     const { username, email, password } = user;
 
     // Verificar si el username ya existe
@@ -27,7 +34,7 @@ export class UserService {
     });
 
     if (existingUser) {
-      throw new HttpException('Username already in use', 409);
+      throw new HttpException('Nombre de usuario en uso', 409);
     }
 
     // Verificar si el email ya existe
@@ -35,7 +42,7 @@ export class UserService {
       where: { email },
     });
     if (existingEmail) {
-      throw new HttpException('Email already in use', 409);
+      throw new HttpException('Correo electrónico en uso', 409);
     }
 
     // Encriptar la contraseña
@@ -63,29 +70,23 @@ export class UserService {
       where: { username: username },
     });
     if (!user) {
-      throw new HttpException('User not found', 404);
+      throw new HttpException('Usuario no encontrado', 404);
     }
     const hashedPassword = await bcrypt.hash(password, 10);
-    const updatedUser = await this.prisma.user.update({
+    await this.prisma.user.update({
       where: { username: username },
       data: { password: hashedPassword },
     });
-    return {
-      username: updatedUser.username,
-      email: updatedUser.email,
-      role: updatedUser.role,
-    };
+    return true;
   }
 
   async updateData(userData: User): Promise<any> {
     const {
       username,
-      dni,
       name1,
       name2,
       surname1,
       surname2,
-      email,
       gender,
       address,
       birthPlace,
@@ -96,17 +97,15 @@ export class UserService {
       where: { username: username },
     });
     if (!user) {
-      throw new HttpException('User not found', 404);
+      throw new HttpException('Usuario no encontrado', 404);
     }
     const updatedUser = await this.prisma.user.update({
       where: { username: username },
       data: {
-        dni,
         name1,
         name2,
         surname1,
         surname2,
-        email,
         gender,
         address,
         birthPlace,
@@ -127,7 +126,7 @@ export class UserService {
     });
     console.log(user);
     if (!user) {
-      throw new HttpException('User not found', 404);
+      throw new HttpException('Usuario no encontrado', 404);
     }
     const response: User = {
       username: user.username,

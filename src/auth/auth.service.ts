@@ -8,12 +8,14 @@ import { JwtService } from '@nestjs/jwt';
 import { compare, hash } from 'bcrypt';
 import { PrismaService } from '../prisma.service';
 import { User } from 'src/users/interfaces/user.interface';
+import { ValidationService } from 'src/users/validation/validation.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
+    private validationUser: ValidationService,
   ) {}
 
   async login(credentials: Credentials): Promise<any> {
@@ -59,6 +61,9 @@ export class AuthService {
   }
 
   async register(userData: User): Promise<any> {
+    if ((await this.validationUser.validateUserData(userData)) !== true) {
+      return;
+    }
     const {
       username,
       password,
