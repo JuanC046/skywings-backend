@@ -9,6 +9,7 @@ import { compare, hash } from 'bcrypt';
 import { PrismaService } from '../prisma.service';
 import { User } from 'src/users/interfaces/user.interface';
 import { ValidationService } from 'src/validation/validation.service';
+import { log } from 'console';
 
 @Injectable()
 export class AuthService {
@@ -79,18 +80,17 @@ export class AuthService {
     } = userData;
 
     // Verificar si el username o email ya existen
-    try {
-      const existingUser = await this.prisma.user.findFirst({
-        where: {
-          OR: [{ username }, { email }, { dni }],
-        },
-      });
-
-      if (existingUser) {
-        throw new HttpException('Username, email, or dni already in use', 409);
-      }
-    } catch (error) {
-      error.message = 'Error checking for existing user';
+    const existingUser = await this.prisma.user.findFirst({
+      where: {
+        OR: [{ username }, { email }, { dni }],
+      },
+    });
+    
+    if (existingUser) {
+      throw new HttpException(
+        'El nombre de usuario, correo o dni ya se encuentra en uso',
+        409,
+      );
     }
 
     // Encriptar la contraseña
