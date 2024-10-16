@@ -1,18 +1,18 @@
 {
-  "internacional": {
-    "origen": [
-      { "ciudad": "Pereira, Colombia", "codigo": "PER" },
-      { "ciudad": "Bogotá, Colombia", "codigo": "BOG" },
-      { "ciudad": "Medellín, Colombia", "codigo": "MED" },
-      { "ciudad": "Cali, Colombia", "codigo": "CAL" },
-      { "ciudad": "Cartagena, Colombia", "codigo": "CAR" }
+  "international": {
+    "origin": [
+      { "city": "Pereira, Colombia", "code": "PER" },
+      { "city": "Bogotá, Colombia", "code": "BOG" },
+      { "city": "Medellín, Colombia", "code": "MED" },
+      { "city": "Cali, Colombia", "code": "CAL" },
+      { "city": "Cartagena, Colombia", "code": "CAR" }
     ],
-    "destino": [
-      { "ciudad": "Madrid, España", "codigo": "MAD" },
-      { "ciudad": "Londres, Reino Unido", "codigo": "LON" },
-      { "ciudad": "New York, Estados Unidos", "codigo": "NYC" },
-      { "ciudad": "Buenos Aires, Argentina", "codigo": "BUE" },
-      { "ciudad": "Miami, Estados Unidos", "codigo": "MIA" }
+    "destination": [
+      { "city": "Madrid, España", "code": "MAD" },
+      { "city": "Londres, Reino Unido", "code": "LON" },
+      { "city": "New York, Estados Unidos", "code": "NYC" },
+      { "city": "Buenos Aires, Argentina", "code": "BUE" },
+      { "city": "Miami, Estados Unidos", "code": "MIA" }
     ]
   }
 }
