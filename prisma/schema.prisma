@@ -57,10 +57,15 @@ model flight {
   code               String   @id @unique
   flightCreator      User     @relation(fields: [creator], references: [username])
   creator            String
-  departureDate      DateTime
+  type               String
   origin             String
   destination        String
-  arrivalDate        DateTime
+  priceFirstClass    Float
+  priceEconomyClass  Float
+  departureDate1     DateTime
+  arrivalDate1       DateTime?
+  departureDate2     DateTime
+  arrivalDate2       DateTime?
   creationDate       DateTime
   lastUpdateDate     DateTime
   erased             Boolean  @default(false)

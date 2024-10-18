@@ -1,5 +1,5 @@
 export interface Flight {
-  code: string;
+  code?: string;
   creator: string; // username admin
   type: string; // National or International
   origin: string;

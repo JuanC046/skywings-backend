@@ -1,5 +1,4 @@
 {
-  "international": {
     "origin": [
       { "city": "Pereira, Colombia", "code": "PER" },
       { "city": "Bogotá, Colombia", "code": "BOG" },
@@ -14,5 +13,4 @@
       { "city": "Buenos Aires, Argentina", "code": "BUE" },
       { "city": "Miami, Estados Unidos", "code": "MIA" }
     ]
-  }
 }
