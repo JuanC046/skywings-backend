@@ -117,7 +117,7 @@ export class UserService {
       throw new HttpException('Usuario no encontrado', 404);
     }
     // Validar los datos del enviados por el usuario
-    await this.validationUser.validateUserData(userData);
+    // await this.validationUser.validateUserData(userData);
     // Actualizar los datos del usuario
     const updatedUser = await this.prisma.user.update({
       where: { username: username },

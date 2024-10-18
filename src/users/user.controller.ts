@@ -51,7 +51,7 @@ export class UserController {
     return this.userService.updateData(userData);
   }
 
-  @Get('getuser')
+  @Post('getuser')
   async getUser(@Body() username: UserName): Promise<any> {
     return this.userService.findUser(username);
   }
