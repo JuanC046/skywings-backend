@@ -18,7 +18,10 @@ export class FlightsController {
   async findAllFlights(): Promise<any> {
     return this.flightsService.findAllFlights();
   }
-
+  @Get('news')
+  async findAllNews(): Promise<any> {
+    return this.flightsService.findAllNews();
+  }
   @Post('newflight')
   async newFlight(@Body() flightData: any): Promise<any> {
     return this.flightsService.createFlight(flightData);

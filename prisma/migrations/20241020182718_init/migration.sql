@@ -58,6 +58,17 @@ CREATE TABLE "flight" (
 );
 
 -- CreateTable
+CREATE TABLE "news" (
+    "id" SERIAL NOT NULL,
+    "title" TEXT NOT NULL,
+    "content" TEXT NOT NULL,
+    "creationDate" TIMESTAMP(3) NOT NULL,
+    "erased" BOOLEAN NOT NULL DEFAULT false,
+
+    CONSTRAINT "news_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "seats" (
     "flightCode" TEXT NOT NULL,
     "totalSeats" INTEGER NOT NULL,

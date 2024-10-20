@@ -74,6 +74,13 @@ model flight {
   seats seats[]
 }
 
+model news {
+  id                 Int      @id @default(autoincrement())
+  title              String
+  content            String
+  creationDate       DateTime
+  erased             Boolean  @default(false)
+}
 model seats {
   flight            flight   @relation(fields: [flightCode], references: [code])
   flightCode        String   @id
