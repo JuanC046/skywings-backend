@@ -6,12 +6,11 @@ export interface Flight {
   destination: string;
   priceFirstClass: number;
   priceEconomyClass: number;
+  flightTime?: number;
   departureDate1: Date;
   arrivalDate1?: Date;
-  departureDate2: Date;
-  arrivalDate2?: Date;
-  creationDate: Date;
-  lastUpdateDate?: Date;
+  creationDate?: Date;
+  lastUpdateDate: Date;
 }
 
 export interface Seats {

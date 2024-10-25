@@ -1,12 +1,12 @@
 {
-    "origin": [
+    "colombia": [
       { "city": "Pereira, Colombia", "code": "PER" },
       { "city": "Bogotá, Colombia", "code": "BOG" },
       { "city": "Medellín, Colombia", "code": "MED" },
       { "city": "Cali, Colombia", "code": "CAL" },
       { "city": "Cartagena, Colombia", "code": "CAR" }
     ],
-    "destination": [
+    "international": [
       { "city": "Madrid, España", "code": "MAD" },
       { "city": "Londres, Reino Unido", "code": "LON" },
       { "city": "New York, Estados Unidos", "code": "NYC" },

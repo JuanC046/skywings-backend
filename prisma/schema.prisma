@@ -62,10 +62,9 @@ model flight {
   destination        String
   priceFirstClass    Float
   priceEconomyClass  Float
+  flightTime         String
   departureDate1     DateTime
-  arrivalDate1       DateTime?
-  departureDate2     DateTime
-  arrivalDate2       DateTime?
+  arrivalDate1       DateTime
   creationDate       DateTime
   lastUpdateDate     DateTime
   erased             Boolean  @default(false)

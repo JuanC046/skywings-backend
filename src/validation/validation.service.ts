@@ -147,12 +147,9 @@ export class ValidationService {
       destination,
       type,
       departureDate1,
-      departureDate2,
-      arrivalDate1,
-      arrivalDate2,
       priceEconomyClass,
       priceFirstClass,
-      creationDate,
+      lastUpdateDate,
     } = flight;
     const errors: string[] = [];
 
@@ -162,69 +159,15 @@ export class ValidationService {
       errors.push('Origen y destino no pueden ser iguales.');
     }
     // Validar que la fecha de creación sea menor a la fecha de salida
-    const creation = new Date(creationDate);
+    const creation = new Date(lastUpdateDate);
     const departure1 = new Date(departureDate1);
     const diff = departure1.getTime() - creation.getTime();
     const diffHours = diff / (1000 * 60 * 60);
-    const minimumTime = type.toLowerCase()[0] === 'n' ? 1 : 3;
+    const minimumTime = type.toLowerCase()[0] === 'n' ? 2 : 4;
     if (diffHours < minimumTime) {
       errors.push(
         `La fecha de creación del vuelo debe ser al menos ${minimumTime} hora(s) antes de la fecha de salida.`,
       );
-    }
-    // Comprobar si las fechas de ida y vuelta son correctas
-    Validator.compareDates(
-      departureDate1,
-      departureDate2,
-      'ida',
-      'vuelta',
-      errors,
-    );
-    const typeFlight = type.toLowerCase();
-    if (typeFlight === 'international') {
-      // Validar la fecha de retorno sea mayor a la de ida
-      if (arrivalDate1 && arrivalDate2) {
-        Validator.compareDates(
-          departureDate1,
-          arrivalDate2,
-          'ida',
-          'llegada del vuelo de retorno',
-          errors,
-        );
-        // Validar la fecha de salida del vuelo de retorno sea mayor a la de llegada
-        Validator.compareDates(
-          arrivalDate1,
-          departureDate2,
-          'llegada del vuelo de ida',
-          'salida del vuelo de retorno',
-          errors,
-        );
-        // Validar que las fechas de llegada no tengan más de 38 horas de diferencia con respecto a la salida
-        // Este valor de 38 horas se toma basado en que para los vuelos disponibles el tiempo máximo de vuelo de 12 horas
-        // y la mayor diferencia horaria entre países es de 26 horas
-        const departure1 = new Date(departureDate1);
-        const arrival1 = new Date(arrivalDate1);
-        const diff = Math.abs(departure1.getTime() - arrival1.getTime());
-        const diffHours = Math.ceil(diff / (1000 * 60 * 60));
-        if (diffHours > 38) {
-          errors.push(
-            'La fecha de llegada del vuelo internacional de ida deben tener como máximo 38 horas de diferencia con la fecha de salida.',
-          );
-        }
-        const departure2 = new Date(departureDate2);
-        const arrival2 = new Date(arrivalDate2);
-        const diff2 = Math.abs(departure2.getTime() - arrival2.getTime());
-        const diffHours2 = Math.ceil(diff2 / (1000 * 60 * 60));
-        if (diffHours2 > 38) {
-          errors.push(
-            'La fecha de llegada del vuelo internacional de vuelta deben tener como máximo 38 horas de diferencia con la fecha de salida.',
-          );
-        }
-      } else {
-        errors.push(
-          'Debe ingresar las fechas de llegada para los vuelos internacionales.',
-        );
-      }
     }
     // Validar precios, deben ser mayores a 0
     if (priceEconomyClass <= 0 || priceFirstClass <= 0) {
