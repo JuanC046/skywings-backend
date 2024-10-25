@@ -6,7 +6,8 @@ import { ValidationService } from '../validation/validation.service';
 import * as fs from 'fs';
 import * as path from 'path';
 import { HttpException } from '@nestjs/common';
-import { SrvRecord } from 'dns';
+import { addHours, addMinutes } from 'date-fns';
+
 
 class FlightClass {
   constructor(private prisma: PrismaService) {}
@@ -15,14 +16,8 @@ class FlightClass {
     const number = Math.floor(Math.random() * 1000);
     return 'SW' + number + originCode + destinationCode;
   }
-  static getLocationsFile(type: string) {
-    type = type.toLowerCase(); // Convierte el tipo a minúsculas
-    if (type[0] === 'i')
-      type = 'international'; // Si la primera letra es 'i', cambia a 'international'
-    else if (type[0] === 'n')
-      type = 'national'; // De lo contrario, cambia a 'national'
-    else type = 'times'; // De lo contrario, cambia a 'times'
-    const filePath = path.join(__dirname, 'locations', `${type}.json`);
+  static getLocationsFile(fileName: string) {
+    const filePath = path.join(__dirname, 'locations', `${fileName}.json`);
     const jsonData = fs.readFileSync(filePath, 'utf-8');
     return JSON.parse(jsonData); // Convierte el contenido a un objeto
   }
@@ -31,13 +26,8 @@ class FlightClass {
     originCode: string,
     destinationCode: string,
   ) {
-    // Normaliza el tipo de vuelo
-    const normalizedType = type.toLowerCase().startsWith('i')
-      ? 'international'
-      : 'national';
-
     // Obtiene las ubicaciones según el tipo
-    const locations = this.getLocationsFile(normalizedType);
+    const locations = this.getLocationsFile(type);
 
     // Función auxiliar para buscar una ubicación por código
     const findLocation = (locationsList: any[], code: string) => {
@@ -48,10 +38,10 @@ class FlightClass {
     let destination = null;
 
     // Busca el origen (en el caso de vuelos internacionales puede estar tanto en 'colombia' como en 'international')
-    if (normalizedType === 'national') {
+    if (type === 'national') {
       origin = findLocation(locations.capitals, originCode);
       destination = findLocation(locations.capitals, destinationCode);
-    } else if (normalizedType === 'international') {
+    } else if (type === 'international') {
       // Primero encuentra el origen
       origin =
         findLocation(locations.colombia, originCode) ||
@@ -69,14 +59,11 @@ class FlightClass {
 
     // Verifica si se encontraron las ubicaciones
     if (origin && destination) {
-      console.log('Origin: ', origin);
-      console.log('Destination: ', destination);
       return {
         origin: origin.city,
         destination: destination.city,
       };
     } else {
-      console.log('Error: Código de origen o destino no encontrado.');
       throw new Error('Código de origen o destino no encontrado.');
     }
   }
@@ -101,14 +88,12 @@ class FlightClass {
     const formatedDate = new Intl.DateTimeFormat('es-CO', formatOptions).format(
       newDate,
     );
-    // console.log(formatedDate); // Ejemplo de salida: "20/10/2024, 03:30:00 p. m."
     return formatedDate;
   }
 
   static flightTime(type: string, origin: string, destination: string) {
     // Obtiene el archivo de tiempos de vuelo
     const times = this.getLocationsFile('times');
-    type = type.toLowerCase();
 
     // Función auxiliar para encontrar un vuelo basado en el origen o destino
     const findFlight = (
@@ -127,38 +112,36 @@ class FlightClass {
       if (type.startsWith('i')) {
         const flightObj = findFlight(times.flights, origin, destination);
         if (!flightObj) throw new Error('No se encontró el vuelo.');
-        return flightObj.flight_time; // Retorna el tiempo de vuelo internacional
-      }
-      // Si es vuelo nacional
-      else {
+        return flightObj.flight_time;
+      } else {
+        // Si es vuelo nacional
         const flightObj = times.flights.find((flight: any) =>
           flight.type.startsWith('n'),
         );
         if (!flightObj) throw new Error('No se encontró el vuelo.');
-        return flightObj.time_flight; // Retorna el tiempo de vuelo nacional
-      }
+        return flightObj.flight_time;
+      } // Retorna el tiempo de vuelo nacional
     } catch (error) {
-      console.log('Error: ', error.message);
+      console.error(error.message);
       throw new Error('No se encontró el tiempo de vuelo.');
     }
   }
 
   static calculateArrivalDate(departureDate: Date, flightTime: string) {
-    // Convierte la fecha de salida a un objeto Date
     try {
+      // Convierte la fecha de salida al formato UTC
       const departure = new Date(departureDate);
 
       // Descompone el tiempo de vuelo en horas y minutos
       const [hours, minutes] = flightTime.split(':').map(Number);
 
-      // Calcula la fecha de llegada sumando las horas y minutos del tiempo de vuelo
-      const arrival = new Date(departure);
-      arrival.setHours(departure.getHours() + hours);
-      arrival.setMinutes(departure.getMinutes() + minutes);
+      // Calcula la fecha de llegada en UTC sumando las horas y minutos del tiempo de vuelo
+      let arrival = addHours(departure, hours);
+      arrival = addMinutes(arrival, minutes);
 
       return arrival;
     } catch (error) {
-      console.log('Error: ', error.message);
+      console.error('Error:', error.message);
       throw new Error('Error al calcular la fecha de llegada.');
     }
   }
@@ -189,9 +172,39 @@ export class FlightsService {
       });
       return flightNew;
     } catch (error) {
-      console.log('Error al crear la noticia: ', error.message);
+      console.error('Error al crear la noticia: ', error.message);
       throw new Error(error.message);
     }
+  }
+  async createSeatsConfiguration(flightCode: string, typeFlight: string) {
+    // Configuración de los asientos del vuelo basado en el tipo (nacional o internacional)
+    const totalSeats = typeFlight.startsWith('n') ? 150 : 250;
+    const totalFirst = typeFlight.startsWith('n') ? 25 : 50;
+    const totalTourist = totalSeats - totalFirst;
+
+    const avaliableFirst = [...Array(totalFirst).keys()]
+      .map((i) => i + 1)
+      .toString();
+    const avaliableTourist = [...Array(totalTourist).keys()]
+      .map((i) => i + totalFirst + 1)
+      .toString();
+
+    // Creación de la configuración de asientos
+    const seats: Seats = {
+      flightCode: flightCode,
+      totalSeats,
+      totalFirst,
+      totalTourist,
+      avaliableFirst,
+      avaliableTourist,
+      busyFirst: [].toString(),
+      busyTourist: [].toString(),
+      erased: false,
+    };
+
+    await this.prisma.seats.create({
+      data: seats,
+    });
   }
   async createFlight(flight: Flight): Promise<any> {
     try {
@@ -220,7 +233,9 @@ export class FlightsService {
       } while (existingFlight); // Repite hasta encontrar un código único
 
       // Obtener las ubicaciones de origen y destino
-      const typeFlight = type.toLowerCase();
+      const typeFlight = type.toLowerCase().startsWith('i')
+        ? 'international'
+        : 'national';
       let locationsFlight: any;
       try {
         locationsFlight = FlightClass.getLocations(
@@ -231,13 +246,12 @@ export class FlightsService {
       } catch (error) {
         console.error('Error obteniendo ubicaciones:', error.message);
         throw new HttpException(
-          'Error al obtener las ubicaciones del vuelo.',
+          `Error obteniendo ubicaciones: ${error.message}`,
           400,
         );
       }
       // Obtención del tiempo de vuelo
       const flightTime = FlightClass.flightTime(type, origin, destination);
-
       // Cálculo de la fecha de llegada
       const arrivalDate1 = FlightClass.calculateArrivalDate(
         departureDate1,
@@ -268,34 +282,8 @@ export class FlightsService {
         );
       }
 
-      // Configuración de los asientos del vuelo basado en el tipo (nacional o internacional)
-      const totalSeats = typeFlight.startsWith('n') ? 150 : 250;
-      const totalFirst = typeFlight.startsWith('n') ? 25 : 50;
-      const totalTourist = totalSeats - totalFirst;
-
-      const avaliableFirst = [...Array(totalFirst).keys()]
-        .map((i) => i + 1)
-        .toString();
-      const avaliableTourist = [...Array(totalTourist).keys()]
-        .map((i) => i + totalFirst + 1)
-        .toString();
-
-      // Creación de la configuración de asientos
-      const seats: Seats = {
-        flightCode: flightCode,
-        totalSeats,
-        totalFirst,
-        totalTourist,
-        avaliableFirst,
-        avaliableTourist,
-        busyFirst: [].toString(),
-        busyTourist: [].toString(),
-        erased: false,
-      };
-
-      await this.prisma.seats.create({
-        data: seats,
-      });
+      // Llamada a la función de creación de asientos
+      await this.createSeatsConfiguration(flightCode, typeFlight);
 
       // Notificación de la creación del nuevo vuelo
       const departureDate1Colombia = FlightClass.formatDate(departureDate1);

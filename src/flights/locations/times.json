@@ -1,10 +1,10 @@
 {
-    "flights": [
-    { "type": "international", "to": "Madrid, España", "code": "MAD", "flight_time": "10:15" },
-    { "type": "international", "to": "Londres, Reino Unido", "code": "LON", "flight_time": "10:40" },
-    { "type": "international", "to": "New York, Estados Unidos", "code": "NYC", "flight_time": "5:30" },
-    { "type": "international", "to": "Buenos Aires, Argentina", "code": "BUE", "flight_time": "6:20" },
-    { "type": "international", "to": "Miami, Estados Unidos", "code": "MIA", "flight_time": "3:45" },
-    { "type": "national", "flight_time": "1:15"}
+  "flights": [
+    { "type": "international", "to": "Madrid, España", "code": "MAD", "flight_time": "10:15", "timezone": "Europe/Madrid" },
+    { "type": "international", "to": "Londres, Reino Unido", "code": "LON", "flight_time": "10:40", "timezone": "Europe/London" },
+    { "type": "international", "to": "New York, Estados Unidos", "code": "NYC", "flight_time": "5:30", "timezone": "America/New_York" },
+    { "type": "international", "to": "Buenos Aires, Argentina", "code": "BUE", "flight_time": "6:20", "timezone": "America/Argentina/Buenos_Aires" },
+    { "type": "international", "to": "Miami, Estados Unidos", "code": "MIA", "flight_time": "3:45", "timezone": "America/New_York" },
+    { "type": "national", "flight_time": "1:15", "timezone": "America/Bogota" }
   ]
 }
