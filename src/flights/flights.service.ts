@@ -8,7 +8,6 @@ import * as path from 'path';
 import { HttpException } from '@nestjs/common';
 import { addHours, addMinutes } from 'date-fns';
 
-
 class FlightClass {
   constructor(private prisma: PrismaService) {}
 
@@ -305,15 +304,52 @@ export class FlightsService {
       );
     }
   }
-
-  // Elim
-  //Obtener vuelos por parámetro: fecha de vuelo
-  async getFlightsByDate(date: Date) {
-    const flights = await this.prisma.flight.findMany({
-      where: {
-        departureDate1: date,
-      },
-    });
-    return flights;
+  async notifyPassangers(flightCode: string, message: string) {
+    console.log(message, flightCode);
   }
+  // Eliminar/cancelar vuelo
+  async deleteFlight(flightCode: string, currentDate: Date) {
+    // Buscar el vuelo a eliminar
+    const flight = await this.prisma.flight.findUnique({
+      where: { code: flightCode },
+    });
+    // Verificar si el vuelo existe
+    if (!flight) {
+      throw new HttpException('Vuelo no encontrado.', 404);
+    }
+    currentDate = new Date(currentDate);
+    const departureDate = new Date(flight.departureDate1);
+    // Verificar que el vuelo no haya salido
+    if (departureDate <= currentDate) {
+      throw new HttpException(
+        'No se puede cancelar un vuelo realizado o a punto de salir.',
+        400,
+      );
+    }
+    // Borrado lógico del vuelo, asientos y notificar a los pasajeros
+    try {
+      await this.prisma.flight.update({
+        where: { code: flightCode },
+        data: { erased: true, lastUpdateDate: currentDate },
+      });
+      await this.prisma.seats.update({
+        where: { flightCode },
+        data: { erased: true },
+      });
+      await this.notifyPassangers(flightCode, 'Vuelo cancelado.');
+      return true;
+    } catch (error) {
+      console.error('Error al cancelar el vuelo:', error.message);
+      throw new HttpException('Error al cancelar el vuelo.', 500);
+    }
+  }
+  //Obtener vuelos por parámetro: fecha de vuelo
+  // async getFlightsByDate(date: Date) {
+  //   const flights = await this.prisma.flight.findMany({
+  //     where: {
+  //       departureDate1: date,
+  //     },
+  //   });
+  //   return flights;
+  // }
 }

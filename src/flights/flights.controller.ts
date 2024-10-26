@@ -27,4 +27,11 @@ export class FlightsController {
   async newFlight(@Body() flightData: any): Promise<any> {
     return this.flightsService.createFlight(flightData);
   }
+  @Delete('deleteflight')
+  async deleteFlight(@Body() parameters: any): Promise<any> {
+    return this.flightsService.deleteFlight(
+      parameters.flightCode,
+      parameters.currentDate,
+    );
+  }
 }
