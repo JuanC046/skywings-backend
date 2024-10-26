@@ -34,4 +34,13 @@ export class FlightsController {
       parameters.currentDate,
     );
   }
+  @Patch('updateflight')
+  async updateFlight(@Body() flightData: any): Promise<any> {
+    return this.flightsService.changeFlightPrice(
+      flightData.flightCode,
+      flightData.priceEconomyClass,
+      flightData.priceFirstClass,
+      flightData.currentDate,
+    );
+  }
 }
