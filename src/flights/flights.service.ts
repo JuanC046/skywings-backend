@@ -7,6 +7,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { HttpException } from '@nestjs/common';
 import { DateTime } from 'luxon';
+import { time } from 'console';
 class FlightClass {
   static codeGenerator(originCode: string, destinationCode: string) {
     const number = Math.floor(Math.random() * 1000);
@@ -97,20 +98,26 @@ class FlightClass {
     );
     return formatedDate;
   }
+  static getOffsetHours(date: Date | string, timeZone: string): number {
+    const dateTime = DateTime.fromISO(date.toString(), { zone: timeZone });
+    return dateTime.offset / 60; // Luxon devuelve offset en minutos, así que dividimos entre 60
+  }
   // convert a date from a specific timezone to UTC
   static convertToUTC(date: Date | string, timeZone: string) {
-    const dateTime =
-      typeof date === 'string'
-        ? DateTime.fromISO(date, { zone: timeZone })
-        : DateTime.fromJSDate(date, { zone: timeZone });
+    const originOffsetHours = this.getOffsetHours(date, timeZone);
+    const initialDate = new Date(date);
 
-    return dateTime.toUTC().toJSDate();
+    // Restar la diferencia horaria del origen para obtener la hora UTC correcta
+    initialDate.setHours(initialDate.getHours() - originOffsetHours);
+
+    return initialDate;
   }
   // convert a date from UTC to a specific timezone and chaging the time
-  static convertFromUTC(date: Date, timeZone: string) {
-    return DateTime.fromJSDate(date, { zone: 'UTC' })
-      .setZone(timeZone) // Cambia la fecha a la zona horaria deseada
-      .toJSDate(); // Devuelve un objeto Date en el formato soportado por JavaScript
+  static convertFromUTC(date: Date | string, timeZone: string): Date {
+    const dateTimeUTC = DateTime.fromISO(date.toString(), { zone: 'UTC' });
+    const dateInTimeZone = dateTimeUTC.setZone(timeZone);
+
+    return dateInTimeZone.toJSDate();
   }
   static validateMinimumTime(
     currentDateUTC: Date,
@@ -260,16 +267,14 @@ export class FlightsService {
 
       // Obtener la fecha actual en UTC
       const currentDateUTC = new Date();
-
       // Obtener zona horaria del origen del vuelo
       const timeZone = FlightClass.getTimezone(locationsFlight.origin);
-
+      console.log('timeZone', timeZone);
       // Convertir la fecha de salida a UTC
       const departureDateUTC = FlightClass.convertToUTC(
-        new Date(departureDate1),
+        departureDate1,
         timeZone,
       );
-
       // Validar que la fecha de salida cumpla con el tiempo mínimo
       this.validateDepartureDate(currentDateUTC, departureDateUTC, typeFlight);
 
