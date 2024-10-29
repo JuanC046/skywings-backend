@@ -3,10 +3,9 @@ import {
   Get,
   Post,
   Body,
-  Put,
   Patch,
   Delete,
-  UseGuards,
+  UseGuards, // Se implementará luego
 } from '@nestjs/common';
 import { FlightsService } from './flights.service';
 import { ApiTags } from '@nestjs/swagger';
@@ -23,15 +22,15 @@ export class FlightsController {
   async findAllNews(): Promise<any> {
     return this.flightsService.findAllNews();
   }
-  @Post('newflight')
+  @Post('create')
   async newFlight(@Body() flightData: any): Promise<any> {
     return this.flightsService.createFlight(flightData);
   }
-  @Delete('deleteflight')
+  @Delete('delete')
   async deleteFlight(@Body() parameters: any): Promise<any> {
     return this.flightsService.deleteFlight(parameters.flightCode);
   }
-  @Patch('updateflight')
+  @Patch('update')
   async updateFlight(@Body() flightData: any): Promise<any> {
     return this.flightsService.changeFlightPrice(
       flightData.flightCode,

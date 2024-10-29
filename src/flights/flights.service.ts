@@ -473,6 +473,15 @@ export class FlightsService {
       throw new HttpException('Error al cancelar el vuelo.', 500);
     }
   }
+  private async notifyNewFlightPrice(flight: Flight) {
+    const { origin, destination, departureDate1 } = flight;
+    const departureDate1Colombia = FlightClass.formatDate(departureDate1);
+    await this.createNew({
+      title: `¡Nuevos precios!`,
+      content: `Vuelo de ${origin} a ${destination}\n${departureDate1Colombia}\nFecha del vuelo ${departureDate1Colombia}`,
+      creationDate: new Date(),
+    });
+  }
   async changeFlightPrice(
     flightCode: string,
     newPriceEconomyClass: number,
@@ -522,6 +531,8 @@ export class FlightsService {
           lastUpdateDate: currentDate,
         },
       });
+      // Noticia de cambio de precios
+      await this.notifyNewFlightPrice(updateFlight);
       return updateFlight;
     } catch (error) {
       console.error('Error al cambiar el precio del vuelo:', error.message);

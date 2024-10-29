@@ -6,7 +6,7 @@ export interface Flight {
   destination: string;
   priceFirstClass: number;
   priceEconomyClass: number;
-  flightTime?: number;
+  flightTime?: string;
   departureDate1: Date;
   arrivalDate1?: Date;
   creationDate?: Date;
