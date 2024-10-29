@@ -10,7 +10,7 @@ export interface Flight {
   departureDate1: Date;
   arrivalDate1?: Date;
   creationDate?: Date;
-  lastUpdateDate: Date;
+  lastUpdateDate?: Date;
 }
 
 export interface Seats {

@@ -6,11 +6,8 @@ import { ValidationService } from '../validation/validation.service';
 import * as fs from 'fs';
 import * as path from 'path';
 import { HttpException } from '@nestjs/common';
-import { addHours, addMinutes } from 'date-fns';
-
+import { DateTime } from 'luxon';
 class FlightClass {
-  constructor(private prisma: PrismaService) {}
-
   static codeGenerator(originCode: string, destinationCode: string) {
     const number = Math.floor(Math.random() * 1000);
     return 'SW' + number + originCode + destinationCode;
@@ -66,8 +63,19 @@ class FlightClass {
       throw new Error('Código de origen o destino no encontrado.');
     }
   }
+  // get the timezone of a specific location
+  static getTimezone(location: string) {
+    const locations = this.getLocationsFile('times');
+    const modifiedLocation = location.includes('Colombia')
+      ? 'Bogotá, Colombia'
+      : location;
+    const zone = locations.flights.find(
+      (city: any) => city.zone === modifiedLocation,
+    );
+    return zone.timeZone;
+  }
 
-  static formatDate(date: Date) {
+  static formatDate(date: Date, timeZone = 'UTC') {
     // Parsear la fecha sin cambiar el valor
     const newDate = new Date(date);
 
@@ -80,7 +88,7 @@ class FlightClass {
       minute: '2-digit',
       second: '2-digit',
       hour12: true, // Para formato de 12 horas (am/pm)
-      timeZone: 'UTC', // Mantiene la hora sin convertirla a la zona local
+      timeZone, // Mantiene la hora sin convertirla a la zona local
     };
 
     // Mostrar la fecha formateada en el formato colombiano
@@ -89,7 +97,32 @@ class FlightClass {
     );
     return formatedDate;
   }
+  // convert a date from a specific timezone to UTC
+  static convertToUTC(date: Date | string, timeZone: string) {
+    const dateTime =
+      typeof date === 'string'
+        ? DateTime.fromISO(date, { zone: timeZone })
+        : DateTime.fromJSDate(date, { zone: timeZone });
 
+    return dateTime.toUTC().toJSDate();
+  }
+  // convert a date from UTC to a specific timezone and chaging the time
+  static convertFromUTC(date: Date, timeZone: string) {
+    return DateTime.fromJSDate(date, { zone: 'UTC' })
+      .setZone(timeZone) // Cambia la fecha a la zona horaria deseada
+      .toJSDate(); // Devuelve un objeto Date en el formato soportado por JavaScript
+  }
+  static validateMinimumTime(
+    currentDateUTC: Date,
+    departureDateUTC: Date,
+    minimumTime: number,
+  ) {
+    const currentDate = DateTime.fromJSDate(currentDateUTC);
+    const departureDate = DateTime.fromJSDate(departureDateUTC);
+
+    const differenceInHours = departureDate.diff(currentDate, 'hours').hours;
+    return differenceInHours >= minimumTime;
+  }
   static flightTime(type: string, origin: string, destination: string) {
     // Obtiene el archivo de tiempos de vuelo
     const times = this.getLocationsFile('times');
@@ -111,14 +144,14 @@ class FlightClass {
       if (type.startsWith('i')) {
         const flightObj = findFlight(times.flights, origin, destination);
         if (!flightObj) throw new Error('No se encontró el vuelo.');
-        return flightObj.flight_time;
+        return flightObj.flightTime;
       } else {
         // Si es vuelo nacional
         const flightObj = times.flights.find((flight: any) =>
           flight.type.startsWith('n'),
         );
         if (!flightObj) throw new Error('No se encontró el vuelo.');
-        return flightObj.flight_time;
+        return flightObj.flightTime;
       } // Retorna el tiempo de vuelo nacional
     } catch (error) {
       console.error(error.message);
@@ -127,22 +160,15 @@ class FlightClass {
   }
 
   static calculateArrivalDate(departureDate: Date, flightTime: string) {
-    try {
-      // Convierte la fecha de salida al formato UTC
-      const departure = new Date(departureDate);
+    // Convierte el tiempo de vuelo en horas y minutos
+    const [hours, minutes] = flightTime.split(':').map(Number);
 
-      // Descompone el tiempo de vuelo en horas y minutos
-      const [hours, minutes] = flightTime.split(':').map(Number);
+    // Usa Luxon para manejar la fecha de salida y sumar el tiempo de vuelo
+    const arrivalDate = DateTime.fromJSDate(departureDate)
+      .plus({ hours, minutes }) // Suma horas y minutos
+      .toJSDate(); // Retorna en formato Date compatible con JavaScript
 
-      // Calcula la fecha de llegada en UTC sumando las horas y minutos del tiempo de vuelo
-      let arrival = addHours(departure, hours);
-      arrival = addMinutes(arrival, minutes);
-
-      return arrival;
-    } catch (error) {
-      console.error('Error:', error.message);
-      throw new Error('Error al calcular la fecha de llegada.');
-    }
+    return arrivalDate;
   }
 }
 @Injectable()
@@ -159,7 +185,7 @@ export class FlightsService {
   async findAllNews() {
     return this.prisma.news.findMany();
   }
-  async createNew(newData: New): Promise<any> {
+  private async createNew(newData: New): Promise<any> {
     const { title, content, creationDate } = newData;
     try {
       const flightNew = await this.prisma.news.create({
@@ -218,78 +244,74 @@ export class FlightsService {
         priceFirstClass,
         priceEconomyClass,
         departureDate1,
-        lastUpdateDate,
       } = flight;
 
-      // Generación de un código de vuelo único
-      let flightCode: string;
-      let existingFlight = null;
-      do {
-        flightCode = FlightClass.codeGenerator(origin, destination);
-        existingFlight = await this.prisma.flight.findUnique({
-          where: { code: flightCode },
-        });
-      } while (existingFlight); // Repite hasta encontrar un código único
-
-      // Obtener las ubicaciones de origen y destino
+      // Normalize type flight
       const typeFlight = type.toLowerCase().startsWith('i')
         ? 'international'
         : 'national';
-      let locationsFlight: any;
-      try {
-        locationsFlight = FlightClass.getLocations(
-          typeFlight,
-          origin,
-          destination,
-        );
-      } catch (error) {
-        console.error('Error obteniendo ubicaciones:', error.message);
-        throw new HttpException(
-          `Error obteniendo ubicaciones: ${error.message}`,
-          400,
-        );
-      }
+
+      // Obtener las ubicaciones de origen y destino
+      const locationsFlight = this.getLocationsFlight(
+        typeFlight,
+        origin,
+        destination,
+      );
+
+      // Obtener la fecha actual en UTC
+      const currentDateUTC = new Date();
+
+      // Obtener zona horaria del origen del vuelo
+      const timeZone = FlightClass.getTimezone(locationsFlight.origin);
+
+      // Convertir la fecha de salida a UTC
+      const departureDateUTC = FlightClass.convertToUTC(
+        new Date(departureDate1),
+        timeZone,
+      );
+
+      // Validar que la fecha de salida cumpla con el tiempo mínimo
+      this.validateDepartureDate(currentDateUTC, departureDateUTC, typeFlight);
+
+      // Generación de un código de vuelo único
+      const flightCode = await this.generateUniqueFlightCode(
+        origin,
+        destination,
+      );
+
       // Obtención del tiempo de vuelo
       const flightTime = FlightClass.flightTime(type, origin, destination);
+
       // Cálculo de la fecha de llegada
       const arrivalDate1 = FlightClass.calculateArrivalDate(
-        departureDate1,
+        departureDateUTC,
         flightTime,
       );
-      // Creación del nuevo vuelo en la base de datos
-      const newFlight = await this.prisma.flight.create({
-        data: {
-          code: flightCode,
-          creator,
-          type: typeFlight,
-          origin: locationsFlight.origin,
-          destination: locationsFlight.destination,
-          priceFirstClass,
-          priceEconomyClass,
-          flightTime,
-          departureDate1,
-          arrivalDate1,
-          creationDate: lastUpdateDate,
-          lastUpdateDate,
-        },
-      });
 
-      if (!newFlight) {
-        throw new HttpException(
-          'No se pudo crear el vuelo, intente de nuevo.',
-          500,
-        );
-      }
+      // Creación del nuevo vuelo en la base de datos
+      const newFlight = await this.createFlightInDatabase({
+        flightCode,
+        creator,
+        typeFlight,
+        locationsFlight,
+        priceFirstClass,
+        priceEconomyClass,
+        flightTime,
+        departureDateUTC,
+        arrivalDate1,
+        currentDateUTC,
+      });
 
       // Llamada a la función de creación de asientos
       await this.createSeatsConfiguration(flightCode, typeFlight);
 
       // Notificación de la creación del nuevo vuelo
-      const departureDate1Colombia = FlightClass.formatDate(departureDate1);
-      await this.createNew({
-        title: `¡Nuevo vuelo ${typeFlight.startsWith('i') ? 'Internacional' : 'Nacional'}!`,
-        content: `De ${locationsFlight.origin} a ${locationsFlight.destination}\n${departureDate1Colombia}\nPrecios desde ${priceEconomyClass} COP por trayecto`,
-        creationDate: lastUpdateDate,
+      await this.notifyNewFlightCreation({
+        typeFlight,
+        locationsFlight,
+        departureDate1,
+        priceEconomyClass,
+        currentDateUTC,
       });
 
       return newFlight;
@@ -304,11 +326,115 @@ export class FlightsService {
       );
     }
   }
+
+  private getLocationsFlight(
+    typeFlight: string,
+    origin: string,
+    destination: string,
+  ) {
+    try {
+      return FlightClass.getLocations(typeFlight, origin, destination);
+    } catch (error) {
+      console.error('Error obteniendo ubicaciones:', error.message);
+      throw new HttpException(
+        `Error obteniendo ubicaciones: ${error.message}`,
+        400,
+      );
+    }
+  }
+
+  private validateDepartureDate(
+    currentDateUTC: Date,
+    departureDateUTC: Date,
+    typeFlight: string,
+  ) {
+    const minimumTime = typeFlight === 'national' ? 2 : 4;
+    if (
+      !FlightClass.validateMinimumTime(
+        currentDateUTC,
+        departureDateUTC,
+        minimumTime,
+      )
+    ) {
+      throw new HttpException(
+        `La fecha de salida debe ser al menos ${minimumTime} horas después de la fecha actual.`,
+        400,
+      );
+    }
+  }
+
+  private async generateUniqueFlightCode(
+    origin: string,
+    destination: string,
+  ): Promise<string> {
+    let flightCode: string;
+    let existingFlight = null;
+    do {
+      flightCode = FlightClass.codeGenerator(origin, destination);
+      existingFlight = await this.prisma.flight.findUnique({
+        where: { code: flightCode },
+      });
+    } while (existingFlight); // Repite hasta encontrar un código único
+    return flightCode;
+  }
+
+  private async createFlightInDatabase({
+    flightCode,
+    creator,
+    typeFlight,
+    locationsFlight,
+    priceFirstClass,
+    priceEconomyClass,
+    flightTime,
+    departureDateUTC,
+    arrivalDate1,
+    currentDateUTC,
+  }: any) {
+    try {
+      return await this.prisma.flight.create({
+        data: {
+          code: flightCode,
+          creator,
+          type: typeFlight,
+          origin: locationsFlight.origin,
+          destination: locationsFlight.destination,
+          priceFirstClass,
+          priceEconomyClass,
+          flightTime,
+          departureDate1: departureDateUTC,
+          arrivalDate1: arrivalDate1,
+          creationDate: currentDateUTC,
+          lastUpdateDate: currentDateUTC,
+        },
+      });
+    } catch (error) {
+      console.error('Error al crear el vuelo:', error.message);
+      throw new HttpException(
+        'No se pudo crear el vuelo, intente de nuevo.',
+        500,
+      );
+    }
+  }
+
+  private async notifyNewFlightCreation({
+    typeFlight,
+    locationsFlight,
+    departureDate1,
+    priceEconomyClass,
+    currentDateUTC,
+  }: any) {
+    const departureDate1Colombia = FlightClass.formatDate(departureDate1);
+    await this.createNew({
+      title: `¡Nuevo vuelo ${typeFlight.startsWith('i') ? 'Internacional' : 'Nacional'}!`,
+      content: `De ${locationsFlight.origin} a ${locationsFlight.destination}\n${departureDate1Colombia}\nPrecios desde ${priceEconomyClass} COP por trayecto`,
+      creationDate: currentDateUTC,
+    });
+  }
   async notifyPassangers(flightCode: string, message: string) {
     console.log(message, flightCode);
   }
   // Eliminar/cancelar vuelo
-  async deleteFlight(flightCode: string, currentDate: Date) {
+  async deleteFlight(flightCode: string) {
     // Buscar el vuelo a eliminar
     const flight = await this.prisma.flight.findUnique({
       where: { code: flightCode },
@@ -317,7 +443,7 @@ export class FlightsService {
     if (!flight) {
       throw new HttpException('Vuelo no encontrado.', 404);
     }
-    currentDate = new Date(currentDate);
+    const currentDate = new Date();
     const departureDate = new Date(flight.departureDate1);
     // Verificar que el vuelo no haya salido
     if (departureDate <= currentDate) {
@@ -351,7 +477,6 @@ export class FlightsService {
     flightCode: string,
     newPriceEconomyClass: number,
     newPriceFirstClass: number,
-    currentDate: Date,
   ) {
     // Buscar el vuelo a editar
     const flight = await this.prisma.flight.findUnique({
@@ -361,7 +486,7 @@ export class FlightsService {
     if (!flight) {
       throw new HttpException('Vuelo no encontrado.', 404);
     }
-    currentDate = new Date(currentDate);
+    const currentDate = new Date();
     const departureDate = new Date(flight.departureDate1);
     // Verificar que el vuelo no haya salido
     if (departureDate <= currentDate) {

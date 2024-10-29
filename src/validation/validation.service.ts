@@ -158,17 +158,17 @@ export class ValidationService {
     if (origin === destination) {
       errors.push('Origen y destino no pueden ser iguales.');
     }
-    // Validar que la fecha de creación sea menor a la fecha de salida
-    const creation = new Date(lastUpdateDate);
-    const departure1 = new Date(departureDate1);
-    const diff = departure1.getTime() - creation.getTime();
-    const diffHours = diff / (1000 * 60 * 60);
-    const minimumTime = type.toLowerCase()[0] === 'n' ? 2 : 4;
-    if (diffHours < minimumTime) {
-      errors.push(
-        `La fecha de creación del vuelo debe ser al menos ${minimumTime} hora(s) antes de la fecha de salida.`,
-      );
-    }
+    // // Validar que la fecha de creación sea menor a la fecha de salida
+    // const creation = new Date(lastUpdateDate);
+    // const departure1 = new Date(departureDate1);
+    // const diff = departure1.getTime() - creation.getTime();
+    // const diffHours = diff / (1000 * 60 * 60);
+    // const minimumTime = type.toLowerCase()[0] === 'n' ? 2 : 4;
+    // if (diffHours < minimumTime) {
+    //   errors.push(
+    //     `La fecha de creación del vuelo debe ser al menos ${minimumTime} hora(s) antes de la fecha de salida.`,
+    //   );
+    // }
     // Validar precios, deben ser mayores a 0
     if (priceEconomyClass <= 0 || priceFirstClass <= 0) {
       errors.push('Los precios deben ser mayores a 0.');

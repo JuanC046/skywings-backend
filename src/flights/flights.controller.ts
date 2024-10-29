@@ -29,10 +29,7 @@ export class FlightsController {
   }
   @Delete('deleteflight')
   async deleteFlight(@Body() parameters: any): Promise<any> {
-    return this.flightsService.deleteFlight(
-      parameters.flightCode,
-      parameters.currentDate,
-    );
+    return this.flightsService.deleteFlight(parameters.flightCode);
   }
   @Patch('updateflight')
   async updateFlight(@Body() flightData: any): Promise<any> {
@@ -40,7 +37,6 @@ export class FlightsController {
       flightData.flightCode,
       flightData.priceEconomyClass,
       flightData.priceFirstClass,
-      flightData.currentDate,
     );
   }
 }
