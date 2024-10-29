@@ -186,11 +186,19 @@ export class FlightsService {
   ) {}
 
   async findAllFlights() {
-    return this.prisma.flight.findMany();
+    const flights = await this.prisma.flight.findMany();
+    if (!flights) {
+      throw new HttpException('No se encontraron vuelos.', 404);
+    }
+    return flights;
   }
 
   async findAllNews() {
-    return this.prisma.news.findMany();
+    const news = await this.prisma.news.findMany();
+    if (!news) {
+      throw new HttpException('No se encontraron noticias.', 404);
+    }
+    return news;
   }
   private async createNew(newData: New): Promise<any> {
     const { title, content, creationDate } = newData;
@@ -269,7 +277,6 @@ export class FlightsService {
       const currentDateUTC = new Date();
       // Obtener zona horaria del origen del vuelo
       const timeZone = FlightClass.getTimezone(locationsFlight.origin);
-      console.log('timeZone', timeZone);
       // Convertir la fecha de salida a UTC
       const departureDateUTC = FlightClass.convertToUTC(
         departureDate1,
@@ -311,13 +318,7 @@ export class FlightsService {
       await this.createSeatsConfiguration(flightCode, typeFlight);
 
       // Notificación de la creación del nuevo vuelo
-      await this.notifyNewFlightCreation({
-        typeFlight,
-        locationsFlight,
-        departureDate1,
-        priceEconomyClass,
-        currentDateUTC,
-      });
+      await this.notifyNewFlightCreation(newFlight);
 
       return newFlight;
     } catch (error) {
@@ -421,18 +422,24 @@ export class FlightsService {
     }
   }
 
-  private async notifyNewFlightCreation({
-    typeFlight,
-    locationsFlight,
-    departureDate1,
-    priceEconomyClass,
-    currentDateUTC,
-  }: any) {
-    const departureDate1Colombia = FlightClass.formatDate(departureDate1);
+  private async notifyNewFlightCreation(newFlight: Flight) {
+    const {
+      type,
+      origin,
+      destination,
+      departureDate1,
+      priceEconomyClass,
+      creationDate,
+    } = newFlight;
+    const timeZone = FlightClass.getTimezone(origin);
+    const departureDate1Origin = FlightClass.formatDate(
+      departureDate1,
+      timeZone,
+    );
     await this.createNew({
-      title: `¡Nuevo vuelo ${typeFlight.startsWith('i') ? 'Internacional' : 'Nacional'}!`,
-      content: `De ${locationsFlight.origin} a ${locationsFlight.destination}\n${departureDate1Colombia}\nPrecios desde ${priceEconomyClass} COP por trayecto`,
-      creationDate: currentDateUTC,
+      title: `¡Nuevo vuelo ${type.startsWith('i') ? 'Internacional' : 'Nacional'}!`,
+      content: `De ${origin} a ${destination}\n${departureDate1Origin} hora ${origin}\nPrecios desde ${priceEconomyClass} COP por trayecto`,
+      creationDate,
     });
   }
   async notifyPassangers(flightCode: string, message: string) {
@@ -544,13 +551,19 @@ export class FlightsService {
       throw new HttpException('Error al cambiar el precio del vuelo.', 500);
     }
   }
-  //Obtener vuelos por parámetro: fecha de vuelo
-  // async getFlightsByDate(date: Date) {
-  //   const flights = await this.prisma.flight.findMany({
-  //     where: {
-  //       departureDate1: date,
-  //     },
-  //   });
-  //   return flights;
-  // }
+  // Obtener los vuelos realizados
+  async getFlightsHistory() {
+    const currentDate = new Date();
+
+    const relizedFights = await this.prisma.flight.findMany({
+      where: {
+        departureDate1: { lt: currentDate },
+        erased: false,
+      },
+    });
+    if (!relizedFights) {
+      throw new HttpException('No se encontraron vuelos realizados.', 404);
+    }
+    return relizedFights;
+  }
 }
