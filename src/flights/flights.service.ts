@@ -486,11 +486,15 @@ export class FlightsService {
     }
   }
   private async notifyNewFlightPrice(flight: Flight) {
-    const { origin, destination, departureDate1 } = flight;
-    const departureDate1Colombia = FlightClass.formatDate(departureDate1);
+    const { origin, destination, departureDate1, priceEconomyClass, priceFirstClass } = flight;
+    const timeZone = FlightClass.getTimezone(origin);
+    const departureDate1Origin = FlightClass.formatDate(
+      departureDate1,
+      timeZone,
+    );
     await this.createNew({
       title: `¡Nuevos precios!`,
-      content: `Vuelo de ${origin} a ${destination}\n${departureDate1Colombia}\nFecha del vuelo ${departureDate1Colombia}`,
+      content: `Vuelo de ${origin} a ${destination}\nFecha del vuelo ${departureDate1Origin} hora ${origin}\nPrecios actualizados\nPrecio clase económica: ${priceEconomyClass} COP\nPrecio primera clase: ${priceFirstClass} COP`,
       creationDate: new Date(),
     });
   }
@@ -509,17 +513,17 @@ export class FlightsService {
     }
     const currentDate = new Date();
     const departureDate = new Date(flight.departureDate1);
-    // Verificar que el vuelo no haya salido
-    if (departureDate <= currentDate) {
-      throw new HttpException(
-        'No se puede editar el precio de un vuelo realizado o a punto de salir.',
-        400,
-      );
-    }
     // Verificar si el vuelo ya fue cancelado
     if (flight.erased) {
       throw new HttpException(
         'El vuelo ya fue cancelado, no se puede cambiar su precio.',
+        400,
+      );
+    }
+    // Verificar que el vuelo no haya salido
+    if (departureDate <= currentDate) {
+      throw new HttpException(
+        'No se puede editar el precio de un vuelo realizado o a punto de salir.',
         400,
       );
     }
@@ -552,18 +556,18 @@ export class FlightsService {
     }
   }
   // Obtener los vuelos realizados
-  async getFlightsHistory() {
+  async getFlightsRealized() {
     const currentDate = new Date();
 
-    const relizedFights = await this.prisma.flight.findMany({
+    const realizedFights = await this.prisma.flight.findMany({
       where: {
         departureDate1: { lt: currentDate },
         erased: false,
       },
     });
-    if (!relizedFights) {
+    if (!realizedFights) {
       throw new HttpException('No se encontraron vuelos realizados.', 404);
     }
-    return relizedFights;
+    return realizedFights;
   }
 }

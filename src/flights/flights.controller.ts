@@ -18,6 +18,10 @@ export class FlightsController {
   async findAllFlights(): Promise<any> {
     return this.flightsService.findAllFlights();
   }
+  @Get('realized')
+  async findRealizedFlights(): Promise<any> {
+    return this.flightsService.getFlightsRealized();
+  }
   @Get('news')
   async findAllNews(): Promise<any> {
     return this.flightsService.findAllNews();
