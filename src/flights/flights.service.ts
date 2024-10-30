@@ -185,8 +185,11 @@ export class FlightsService {
     private validation: ValidationService,
   ) {}
 
-  async findAllFlights() {
-    const flights = await this.prisma.flight.findMany();
+  async findActualFlights() {
+    const currentDate = new Date();
+    const flights = await this.prisma.flight.findMany({
+      where: { erased: false, departureDate1: { gt: currentDate } },
+    });
     if (!flights) {
       throw new HttpException('No se encontraron vuelos.', 404);
     }
@@ -486,7 +489,13 @@ export class FlightsService {
     }
   }
   private async notifyNewFlightPrice(flight: Flight) {
-    const { origin, destination, departureDate1, priceEconomyClass, priceFirstClass } = flight;
+    const {
+      origin,
+      destination,
+      departureDate1,
+      priceEconomyClass,
+      priceFirstClass,
+    } = flight;
     const timeZone = FlightClass.getTimezone(origin);
     const departureDate1Origin = FlightClass.formatDate(
       departureDate1,
@@ -556,7 +565,7 @@ export class FlightsService {
     }
   }
   // Obtener los vuelos realizados
-  async getFlightsRealized() {
+  async findFlightsRealized() {
     const currentDate = new Date();
 
     const realizedFights = await this.prisma.flight.findMany({

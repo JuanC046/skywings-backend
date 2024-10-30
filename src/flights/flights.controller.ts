@@ -15,12 +15,12 @@ export class FlightsController {
   constructor(private readonly flightsService: FlightsService) {}
 
   @Get()
-  async findAllFlights(): Promise<any> {
-    return this.flightsService.findAllFlights();
+  async findActualFlights(): Promise<any> {
+    return this.flightsService.findActualFlights();
   }
   @Get('realized')
   async findRealizedFlights(): Promise<any> {
-    return this.flightsService.getFlightsRealized();
+    return this.flightsService.findFlightsRealized();
   }
   @Get('news')
   async findAllNews(): Promise<any> {
