@@ -97,6 +97,7 @@ export class UserService {
   }
 
   async updateData(userData: User): Promise<any> {
+    await this.validationUser.validateUserUpdate(userData);
     const {
       username,
       name1,

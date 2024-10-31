@@ -131,6 +131,20 @@ export class ValidationService {
 
     return true;
   }
+  async validateUserUpdate(user: User): Promise<any> {
+    const { name1, name2, surname1, surname2, birthDate } = user;
+    const errors: string[] = [];
+
+    // Validaciones adicionales
+    Validator.validateNames([name1, name2, surname1, surname2], errors);
+    Validator.validateAge(String(birthDate), errors);
+
+    if (errors.length > 0) {
+      throw new HttpException(errors.join(', '), 400);
+    }
+
+    return true;
+  }
   async validatePasswordChange(newPassword: string): Promise<any> {
     const errors: string[] = [];
     Validator.validateStringLength(newPassword, 8, 20, 'Contraseña', errors);
@@ -142,15 +156,7 @@ export class ValidationService {
   }
 
   async validateFlightData(flight: any): Promise<any> {
-    const {
-      origin,
-      destination,
-      type,
-      departureDate1,
-      priceEconomyClass,
-      priceFirstClass,
-      lastUpdateDate,
-    } = flight;
+    const { origin, destination, priceEconomyClass, priceFirstClass } = flight;
     const errors: string[] = [];
 
     // Validaciones
@@ -158,17 +164,7 @@ export class ValidationService {
     if (origin === destination) {
       errors.push('Origen y destino no pueden ser iguales.');
     }
-    // // Validar que la fecha de creación sea menor a la fecha de salida
-    // const creation = new Date(lastUpdateDate);
-    // const departure1 = new Date(departureDate1);
-    // const diff = departure1.getTime() - creation.getTime();
-    // const diffHours = diff / (1000 * 60 * 60);
-    // const minimumTime = type.toLowerCase()[0] === 'n' ? 2 : 4;
-    // if (diffHours < minimumTime) {
-    //   errors.push(
-    //     `La fecha de creación del vuelo debe ser al menos ${minimumTime} hora(s) antes de la fecha de salida.`,
-    //   );
-    // }
+
     // Validar precios, deben ser mayores a 0
     if (priceEconomyClass <= 0 || priceFirstClass <= 0) {
       errors.push('Los precios deben ser mayores a 0.');
