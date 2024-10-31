@@ -197,7 +197,14 @@ export class FlightsService {
   }
 
   async findAllNews() {
-    const news = await this.prisma.news.findMany();
+    const currentDate = new Date();
+    const sevenDaysAgo = new Date(currentDate);
+    sevenDaysAgo.setDate(currentDate.getDate() - 7);
+    const news = await this.prisma.news.findMany({
+      where: { creationDate: { gte: sevenDaysAgo } },
+      orderBy: { creationDate: 'desc' },
+    });
+
     if (!news) {
       throw new HttpException('No se encontraron noticias.', 404);
     }
