@@ -17,7 +17,19 @@ export class UserService {
   ) {}
 
   async findAllUsers() {
-    return this.prisma.user.findMany();
+    try {
+      const data = await this.prisma.user.findMany({
+        select: {
+          username: true,
+          dni: true,
+          email: true,
+        },
+      });
+      return data;
+    } catch (error) {
+      console.error(error);
+      throw new HttpException('Error al obtener los datos', 500);
+    }
   }
 
   async findAdmins() {

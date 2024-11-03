@@ -61,3 +61,13 @@ export class UserController {
     return this.userService.delete(username);
   }
 }
+@ApiTags('Get Users Data')
+@Controller('users')
+export class UsersDataController {
+  constructor(private readonly userService: UserService) {}
+
+  @Get()
+  async findAllUsers(): Promise<any> {
+    return this.userService.findAllUsers();
+  }
+}
