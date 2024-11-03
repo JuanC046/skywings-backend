@@ -25,11 +25,6 @@ import { RolesGuard } from 'src/auth/guard/auth.roles.guard';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @Get()
-  async findAllUsers(): Promise<any> {
-    return this.userService.findAllUsers();
-  }
-
   @Get('admins')
   async findAdmins(): Promise<any> {
     return this.userService.findAdmins();
