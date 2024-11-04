@@ -9,7 +9,6 @@ import { compare, hash } from 'bcrypt';
 import { PrismaService } from '../prisma.service';
 import { User } from 'src/users/interfaces/user.interface';
 import { ValidationService } from 'src/validation/validation.service';
-import { log } from 'console';
 
 @Injectable()
 export class AuthService {
@@ -19,6 +18,16 @@ export class AuthService {
     private validationUser: ValidationService,
   ) {}
 
+  private async increaseNumberLogins(username: string): Promise<void> {
+    await this.prisma.user.update({
+      where: { username },
+      data: {
+        numberLogins: {
+          increment: 1,
+        },
+      },
+    });
+  }
   async login(credentials: Credentials): Promise<any> {
     const { username, password } = credentials;
 
@@ -45,6 +54,8 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    await this.increaseNumberLogins(username);
+
     const payload = {
       username: user.username,
       email: user.email,
@@ -58,6 +69,7 @@ export class AuthService {
         expiresIn: '30m',
       }),
       role: user.role,
+      numberLogins: user.numberLogins + 1,
     };
   }
 
@@ -85,7 +97,7 @@ export class AuthService {
         OR: [{ username }, { email }, { dni }],
       },
     });
-    
+
     if (existingUser) {
       throw new HttpException(
         'El nombre de usuario, correo o dni ya se encuentra en uso',
