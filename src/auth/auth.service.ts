@@ -10,6 +10,7 @@ import { PrismaService } from '../prisma.service';
 import { User } from 'src/users/interfaces/user.interface';
 import { ValidationService } from 'src/validation/validation.service';
 
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -30,7 +31,6 @@ export class AuthService {
   }
   async login(credentials: Credentials): Promise<any> {
     const { username, password } = credentials;
-
     const user = await this.prisma.user.findUnique({
       where: { username: username },
     });
@@ -45,11 +45,12 @@ export class AuthService {
     }
 
     let hashedPassword = user.password;
-    if (!user.password.startsWith('$2b$')) {
+    if (!hashedPassword.startsWith('$2b$')) {
       hashedPassword = await hash(user.password, 10);
     }
 
     const isPasswordValid = await compare(password, hashedPassword);
+
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -59,7 +60,6 @@ export class AuthService {
     const payload = {
       username: user.username,
       email: user.email,
-      // role: await hash(user.role, 10),
       role: user.role,
     };
 

@@ -7,6 +7,7 @@ import {
 import { User } from './interfaces/user.interface';
 import { PrismaService } from '../prisma.service';
 import { ValidationService } from '../validation/validation.service';
+import { EmailService } from '../email/email.service';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -14,6 +15,7 @@ export class UserService {
   constructor(
     private prisma: PrismaService,
     private validationUser: ValidationService,
+    private emailService: EmailService,
   ) {}
 
   async findAllUsers() {
@@ -38,12 +40,14 @@ export class UserService {
     });
   }
 
+  private generateRandomPassword(): string {
+    return Math.random().toString(36).slice(-8);
+  }
   async createAdmin(user: Credentials): Promise<any> {
     await this.validationUser.validateCredentials(user);
 
-    const { username, email, password } = user;
+    const { username, email } = user;
 
-    // Verificar si el username ya existe
     const existingUser = await this.prisma.user.findFirst({
       where: { username },
     });
@@ -52,18 +56,27 @@ export class UserService {
       throw new HttpException('Nombre de usuario en uso', 409);
     }
 
-    // Verificar si el email ya existe
     const existingEmail = await this.prisma.user.findFirst({
       where: { email },
     });
     if (existingEmail) {
       throw new HttpException('Correo electrónico en uso', 409);
     }
+    
+    const password = this.generateRandomPassword();
 
-    // Encriptar la contraseña
+    const msg = await this.emailService.sendEmail(
+      email,
+      'Contraseña de acceso',
+      `Su contraseña temporal es: ${password}`,
+    );
+
+    if (!msg) {
+      throw new HttpException('Error al enviar el correo electrónico', 500);
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Crear nuevo usuario
     const newUser = await this.prisma.user.create({
       data: {
         username,
@@ -72,6 +85,10 @@ export class UserService {
         role: 'ADMIN',
       },
     });
+
+    console.log('Username: ', username);
+    console.log('Email: ', email);
+    console.log('Password: ', password);
 
     return {
       username: newUser.username,
@@ -153,11 +170,10 @@ export class UserService {
   }
 
   async findUser(username: UserName): Promise<User> {
-    console.log('User maybe -> ', username);
     const user = await this.prisma.user.findUnique({
       where: { username: username.username },
     });
-    console.log(user);
+    console.log('User finded: ', user);
     if (!user) {
       throw new HttpException('Usuario no encontrado', 404);
     }

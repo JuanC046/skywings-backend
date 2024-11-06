@@ -35,7 +35,6 @@ export class UserController {
     return this.userService.createAdmin(userData);
   }
 
-  //Se utiliza Patch en lugar de Put debido a que es una actualización parcial, un solo campo
   @Patch('updatepassword')
   async updatePassword(@Body() userData: PasswordChange): Promise<any> {
     return this.userService.changePassword(userData);

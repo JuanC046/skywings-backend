@@ -1,9 +1,7 @@
 import { Injectable, HttpException } from '@nestjs/common';
 import { Credentials } from '../users/interfaces/credentials.interface';
 import { User } from '../users/interfaces/user.interface';
-import e from 'express';
-import { log } from 'console';
-import { min } from 'rxjs';
+
 
 class Validator {
   static validateStringLength(
@@ -82,7 +80,7 @@ class Validator {
 @Injectable()
 export class ValidationService {
   async validateCredentials(user: Credentials): Promise<any> {
-    const { username, email, password } = user;
+    const { username, email } = user;
     const errors: string[] = [];
 
     // Validaciones
@@ -95,8 +93,6 @@ export class ValidationService {
     );
     Validator.validateNoSpaces(username, 'Nombre de usuario', errors);
     Validator.validateEmailStructure(email, errors);
-    Validator.validateStringLength(password, 8, 20, 'Contraseña', errors);
-    Validator.validateNoSpaces(password, 'Contraseña', errors);
 
     if (errors.length > 0) {
       throw new HttpException(errors.join(', '), 400);
@@ -120,7 +116,8 @@ export class ValidationService {
 
     // Validaciones comunes
     await this.validateCredentials({ username, email, password });
-
+    Validator.validateStringLength(password, 8, 20, 'Contraseña', errors);
+    Validator.validateNoSpaces(password, 'Contraseña', errors);
     // Validaciones adicionales
     Validator.validateNames([name1, name2, surname1, surname2], errors);
     Validator.validateAge(String(birthDate), errors);
