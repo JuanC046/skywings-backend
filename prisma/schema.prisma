@@ -58,6 +58,7 @@ model flight {
   code               String   @id @unique
   flightCreator      User     @relation(fields: [creator], references: [username])
   creator            String
+  updater            String
   type               String
   origin             String
   destination        String
@@ -69,6 +70,7 @@ model flight {
   creationDate       DateTime
   lastUpdateDate     DateTime
   erased             Boolean  @default(false)
+  
 
   tickets ticket[]
   seats seats[]

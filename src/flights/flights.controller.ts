@@ -40,6 +40,7 @@ export class FlightsController {
       flightData.flightCode,
       flightData.priceEconomyClass,
       flightData.priceFirstClass,
+      flightData.updater,
     );
   }
 }

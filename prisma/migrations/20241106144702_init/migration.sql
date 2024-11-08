@@ -1,6 +1,7 @@
 -- CreateTable
 CREATE TABLE "User" (
     "username" TEXT NOT NULL,
+    "numberLogins" INTEGER NOT NULL DEFAULT 0,
     "role" TEXT NOT NULL DEFAULT 'USER',
     "email" TEXT NOT NULL,
     "password" TEXT NOT NULL,
@@ -41,6 +42,7 @@ CREATE TABLE "passenger" (
 CREATE TABLE "flight" (
     "code" TEXT NOT NULL,
     "creator" TEXT NOT NULL,
+    "updater" TEXT NOT NULL,
     "type" TEXT NOT NULL,
     "origin" TEXT NOT NULL,
     "destination" TEXT NOT NULL,

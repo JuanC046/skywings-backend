@@ -314,6 +314,7 @@ export class FlightsService {
       const newFlight = await this.createFlightInDatabase({
         flightCode,
         creator,
+        updater: creator,
         typeFlight,
         locationsFlight,
         priceFirstClass,
@@ -397,6 +398,7 @@ export class FlightsService {
   private async createFlightInDatabase({
     flightCode,
     creator,
+    updater,
     typeFlight,
     locationsFlight,
     priceFirstClass,
@@ -411,6 +413,7 @@ export class FlightsService {
         data: {
           code: flightCode,
           creator,
+          updater: creator,
           type: typeFlight,
           origin: locationsFlight.origin,
           destination: locationsFlight.destination,
@@ -518,6 +521,7 @@ export class FlightsService {
     flightCode: string,
     newPriceEconomyClass: number,
     newPriceFirstClass: number,
+    updater: string,
   ) {
     // Buscar el vuelo a editar
     const flight = await this.prisma.flight.findUnique({
@@ -560,6 +564,7 @@ export class FlightsService {
         data: {
           priceEconomyClass: newPriceEconomyClass,
           priceFirstClass: newPriceFirstClass,
+          updater: updater,
           lastUpdateDate: currentDate,
         },
       });
