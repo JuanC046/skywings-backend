@@ -20,6 +20,12 @@ export class FlightsController {
   async findActualFlights(): Promise<any> {
     return this.flightsService.findActualFlights();
   }
+  @Get('/:flightCode')
+  async findFlightByCode(
+    @Param('flightCode') flightCode: string,
+  ): Promise<any> {
+    return this.flightsService.findFlightByCode(flightCode);
+  }
   @Get('realized')
   async findRealizedFlights(): Promise<any> {
     return this.flightsService.findFlightsRealized();
@@ -50,4 +56,5 @@ export class FlightsController {
   ): Promise<any> {
     return this.flightsService.findSeatsByFlight(flightCode);
   }
+  
 }

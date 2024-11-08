@@ -430,4 +430,14 @@ export class FlightsService {
     }
     return seats;
   }
+  // Obtener un vuelo específico
+  async findFlightByCode(flightCode: string) {
+    const flight = await this.prisma.flight.findUnique({
+      where: { code: flightCode },
+    });
+    if (!flight) {
+      throw new HttpException('Vuelo no encontrado.', 404);
+    }
+    return flight;
+  }
 }
