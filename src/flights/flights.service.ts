@@ -4,6 +4,7 @@ import {
   Flight,
   Seats,
   OriginDestination,
+  FlightCode
 } from './interfaces/flight.interface';
 import { New } from './interfaces/new.interface';
 import { ValidationService } from '../validation/validation.service';
@@ -607,4 +608,14 @@ export class FlightsService {
     return flights;
   }
   // Obtener la información de asientos de un vuelo
+  async findSeatsByFlight(flight: FlightCode) {
+    const { flightCode } = flight;
+    const seats = await this.prisma.seats.findUnique({
+      where: { flightCode },
+    });
+    if (!seats) {
+      throw new HttpException('No se encontraron asientos.', 404);
+    }
+    return seats;
+  }
 }

@@ -8,7 +8,7 @@ import {
   UseGuards, // Se implementará luego
 } from '@nestjs/common';
 import { FlightsService } from './flights.service';
-import { OriginDestination } from './interfaces/flight.interface';
+import { OriginDestination, FlightCode } from './interfaces/flight.interface';
 import { ApiTags } from '@nestjs/swagger';
 @ApiTags('flights')
 @Controller('flights')
@@ -47,6 +47,10 @@ export class FlightsController {
   @Get('route')
   async findFlightsByRoute(@Body() route: OriginDestination): Promise<any> {
     return this.flightsService.findFlightsByRoute(route);
+  }
+  @Get('seats')
+  async findSeatsByFlight(@Body() flightCode: FlightCode): Promise<any> {
+    return this.flightsService.findSeatsByFlight(flightCode);
   }
 
 }
