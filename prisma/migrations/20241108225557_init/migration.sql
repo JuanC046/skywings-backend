@@ -61,6 +61,7 @@ CREATE TABLE "flight" (
 -- CreateTable
 CREATE TABLE "news" (
     "id" SERIAL NOT NULL,
+    "flightCode" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "content" TEXT NOT NULL,
     "creationDate" TIMESTAMP(3) NOT NULL,
@@ -154,6 +155,9 @@ CREATE UNIQUE INDEX "cards_number_key" ON "cards"("number");
 
 -- AddForeignKey
 ALTER TABLE "flight" ADD CONSTRAINT "flight_creator_fkey" FOREIGN KEY ("creator") REFERENCES "User"("username") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "news" ADD CONSTRAINT "news_flightCode_fkey" FOREIGN KEY ("flightCode") REFERENCES "flight"("code") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "seats" ADD CONSTRAINT "seats_flightCode_fkey" FOREIGN KEY ("flightCode") REFERENCES "flight"("code") ON DELETE RESTRICT ON UPDATE CASCADE;

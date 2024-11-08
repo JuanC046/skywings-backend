@@ -248,6 +248,7 @@ export class FlightsService {
 
   private async notifyNewFlightCreation(newFlight: Flight) {
     const {
+      code,
       type,
       origin,
       destination,
@@ -261,6 +262,7 @@ export class FlightsService {
       timeZone,
     );
     await this.newsService.createNew({
+      flightCode: code,
       title: `¡Nuevo vuelo ${type.startsWith('i') ? 'Internacional' : 'Nacional'}!`,
       content: `De ${origin} a ${destination}\n${departureDate1Origin} hora ${origin}\nPrecios desde ${priceEconomyClass} COP por trayecto`,
       creationDate,
@@ -302,6 +304,7 @@ export class FlightsService {
         where: { flightCode },
         data: { erased: true },
       });
+      await this.newsService.deleteNews(flightCode);
       await this.notifyPassangers(flightCode, 'Vuelo cancelado.');
       return true;
     } catch (error) {
@@ -311,6 +314,7 @@ export class FlightsService {
   }
   private async notifyNewFlightPrice(flight: Flight) {
     const {
+      code,
       origin,
       destination,
       departureDate1,
@@ -323,6 +327,7 @@ export class FlightsService {
       timeZone,
     );
     await this.newsService.createNew({
+      flightCode: code,
       title: `¡Nuevos precios!`,
       content: `Vuelo de ${origin} a ${destination}\nFecha del vuelo ${departureDate1Origin} hora ${origin}\nPrecios actualizados\nPrecio clase económica: ${priceEconomyClass} COP\nPrecio primera clase: ${priceFirstClass} COP`,
       creationDate: new Date(),

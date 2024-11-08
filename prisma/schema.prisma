@@ -74,10 +74,13 @@ model flight {
 
   tickets ticket[]
   seats seats[]
+  news news[]
 }
 
 model news {
-  id                 Int      @id @default(autoincrement())
+  id                 Int     @id @default(autoincrement())
+  flight            flight   @relation(fields: [flightCode], references: [code])
+  flightCode        String   
   title              String
   content            String
   creationDate       DateTime
