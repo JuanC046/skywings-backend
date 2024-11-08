@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Body,
+  Param,
   Patch,
   Delete,
   UseGuards, // Se implementará luego
@@ -48,9 +49,10 @@ export class FlightsController {
   async findFlightsByRoute(@Body() route: OriginDestination): Promise<any> {
     return this.flightsService.findFlightsByRoute(route);
   }
-  @Get('seats')
-  async findSeatsByFlight(@Body() flightCode: FlightCode): Promise<any> {
+  @Get('seats/:flightCode')
+  async findSeatsByFlight(
+    @Param('flightCode') flightCode: string,
+  ): Promise<any> {
     return this.flightsService.findSeatsByFlight(flightCode);
   }
-
 }

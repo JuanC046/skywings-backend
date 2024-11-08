@@ -608,8 +608,7 @@ export class FlightsService {
     return flights;
   }
   // Obtener la información de asientos de un vuelo
-  async findSeatsByFlight(flight: FlightCode) {
-    const { flightCode } = flight;
+  async findSeatsByFlight(flightCode: string) {
     const seats = await this.prisma.seats.findUnique({
       where: { flightCode },
     });
