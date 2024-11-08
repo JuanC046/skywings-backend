@@ -29,7 +29,3 @@ export interface OriginDestination {
   origin: string;
   destination: string;
 }
-
-export interface FlightCode {
-  flightCode: string;
-}
