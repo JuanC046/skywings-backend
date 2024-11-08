@@ -8,6 +8,7 @@ import {
   UseGuards, // Se implementará luego
 } from '@nestjs/common';
 import { FlightsService } from './flights.service';
+import { OriginDestination } from './interfaces/flight.interface';
 import { ApiTags } from '@nestjs/swagger';
 @ApiTags('flights')
 @Controller('flights')
@@ -43,4 +44,9 @@ export class FlightsController {
       flightData.updater,
     );
   }
+  @Get('route')
+  async findFlightsByRoute(@Body() route: OriginDestination): Promise<any> {
+    return this.flightsService.findFlightsByRoute(route);
+  }
+
 }

@@ -24,3 +24,8 @@ export interface Seats {
   busyTourist: string;
   erased: boolean;
 }
+
+export interface OriginDestination {
+  origin: string;
+  destination: string;
+}
