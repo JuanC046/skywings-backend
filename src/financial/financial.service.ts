@@ -150,4 +150,26 @@ export class FinancialService {
       throw new HttpException('Error en la actualización de la tarjeta', 400);
     }
   }
+  async findCard(number: string): Promise<Card> {
+    this.isPositiveNumber(Number(number), 'tarjeta');
+    const cardExists = await this.cardExists(number);
+    if (!cardExists) {
+      throw new HttpException('La tarjeta no ha sido registrada', 400);
+    }
+    const cardDeleted = await this.cardDeleted(number);
+    if (cardDeleted) {
+      throw new HttpException('La tarjeta ha sido eliminada', 400);
+    }
+    try {
+      const card = await this.prisma.cards.findFirst({
+        where: {
+          number,
+        },
+      });
+      return card;
+    } catch (error) {
+      console.error(error);
+      throw new HttpException('Error en la búsqueda de la tarjeta', 400);
+    }
+  }
 }

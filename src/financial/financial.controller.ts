@@ -22,7 +22,11 @@ export class FinancialController {
     return this.financialService.addCard(cardData);
   }
   @Patch('update')
-    async updateCard(@Body() cardData: any): Promise<Card> {
-        return this.financialService.updteCardBalance(cardData);
-    }
+  async updateCard(@Body() cardData: any): Promise<Card> {
+    return this.financialService.updteCardBalance(cardData);
+  }
+  @Get('/:number')
+  async getCard(@Param('number') number: string): Promise<Card> {
+    return this.financialService.findCard(number);
+  }
 }
