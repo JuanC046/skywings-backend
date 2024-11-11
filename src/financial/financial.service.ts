@@ -123,5 +123,31 @@ export class FinancialService {
       throw new HttpException('Error en la creación de la tarjeta', 400);
     }
   }
-
+  async updteCardBalance(data: any): Promise<Card> {
+    const { number, balance } = data;
+    this.isPositiveNumber(Number(number), 'tarjeta');
+    this.isPositiveNumber(balance, 'balance');
+    const cardExists = await this.cardExists(number);
+    if (!cardExists) {
+      throw new HttpException('La tarjeta no ha sido registrada', 400);
+    }
+    const cardDeleted = await this.cardDeleted(number);
+    if (cardDeleted) {
+      throw new HttpException('La tarjeta ha sido eliminada', 400);
+    }
+    try {
+      const card = await this.prisma.cards.update({
+        where: {
+          number,
+        },
+        data: {
+          balance,
+        },
+      });
+      return card;
+    } catch (error) {
+      console.error(error);
+      throw new HttpException('Error en la actualización de la tarjeta', 400);
+    }
+  }
 }

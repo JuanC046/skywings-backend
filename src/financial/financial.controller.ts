@@ -21,4 +21,8 @@ export class FinancialController {
   async addCard(@Body() cardData: Card): Promise<Card> {
     return this.financialService.addCard(cardData);
   }
+  @Patch('update')
+    async updateCard(@Body() cardData: any): Promise<Card> {
+        return this.financialService.updteCardBalance(cardData);
+    }
 }
