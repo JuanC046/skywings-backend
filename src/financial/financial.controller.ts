@@ -29,4 +29,14 @@ export class FinancialController {
   async getCard(@Param('number') number: string): Promise<Card> {
     return this.financialService.findCard(number);
   }
+  @Get('user/:propietary')
+  async getCardsByUser(
+    @Param('propietary') propietary: string,
+  ): Promise<Card[]> {
+    return this.financialService.findCards(propietary);
+  }
+  @Delete('delete')
+  async deleteCard(@Body() cardData: any): Promise<boolean> {
+    return this.financialService.deleteCard(cardData.number);
+  }
 }
