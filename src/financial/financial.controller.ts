@@ -11,9 +11,14 @@ import {
 } from '@nestjs/common';
 import { Card } from './interfaces/card';
 import { FinancialService } from './financial.service';
-
+import { Role } from '../auth/decorator/roles.enum';
+import { Roles } from '../auth/decorator/roles.decorator';
+import { AuthGuard } from '../auth/guard/auth.guard';
+import { RolesGuard } from '../auth/guard/auth.roles.guard';
 @ApiTags('financial')
 @Controller('financial')
+@Roles(Role.User)
+@UseGuards(AuthGuard, RolesGuard)
 export class FinancialController {
   constructor(private readonly financialService: FinancialService) {}
 

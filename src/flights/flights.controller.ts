@@ -11,8 +11,14 @@ import {
 import { FlightsService } from './flights.service';
 import { OriginDestination } from './interfaces/flight.interface';
 import { ApiTags } from '@nestjs/swagger';
+import { Roles } from '../auth/decorator/roles.decorator';
+import { Role } from '../auth/decorator/roles.enum';
+import { AuthGuard } from '../auth/guard/auth.guard';
+import { RolesGuard } from '../auth/guard/auth.roles.guard';
 @ApiTags('flights')
 @Controller('flights')
+@Roles(Role.Admin)
+@UseGuards(AuthGuard, RolesGuard)
 export class FlightsController {
   constructor(private readonly flightsService: FlightsService) {}
 
