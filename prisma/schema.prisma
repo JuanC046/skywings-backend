@@ -37,23 +37,6 @@ model User {
   purchases purchases[]
 }
 
-model passenger {
-  dni                String  @id @unique
-  name1              String
-  name2              String
-  surname1           String
-  surname2           String
-  birthdate          DateTime
-  gender             String
-  phone              String
-  email              String
-  contactName        String
-  contactPhone       String
-  erased             Boolean  @default(false)
-
-  ticket ticket[]
-}
-
 model flight {
   code               String   @id @unique
   flightCreator      User     @relation(fields: [creator], references: [username])
@@ -71,8 +54,7 @@ model flight {
   lastUpdateDate     DateTime
   erased             Boolean  @default(false)
   
-
-  tickets ticket[]
+  passenger passenger[]
   seats seats[]
   news news[]
 }
@@ -98,14 +80,31 @@ model seats {
   busyTourist       String
   erased            Boolean  @default(false)
 }
+model passenger {
+  dni                String  
+  code               flight  @relation(fields: [flightCode], references: [code])
+  flightCode         String
+  name1              String
+  name2              String?
+  surname1           String
+  surname2           String?
+  birthdate          DateTime
+  gender             String
+  phone              String
+  email              String
+  contactName        String
+  contactPhone       String
+  erased             Boolean  @default(false)
 
+  @@id([dni, flightCode])
+  ticket ticket[]
+}
 model ticket {
-  flight            flight   @relation(fields: [flightCode], references: [code])
+  flightPassenger   passenger   @relation(fields: [flightCode, passangerDni], references: [flightCode, dni])
   flightCode        String
+  passangerDni      String
   user              User     @relation(fields: [username], references: [username])
   username          String
-  passenger         passenger @relation(fields: [passengerDni], references: [dni])
-  passengerDni      String
   purchase          purchases @relation(fields: [purchaseId], references: [id])
   purchaseId        Int @default(0)
   seatNumber        String
@@ -114,7 +113,7 @@ model ticket {
   numSuitcase       Int
   erased            Boolean  @default(false)
 
-  @@id([flightCode, passengerDni])
+  @@id([flightCode, passangerDni])
 }
 
 model cards {

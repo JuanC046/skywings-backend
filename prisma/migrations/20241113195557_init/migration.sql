@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "passenger" ALTER COLUMN "name2" DROP NOT NULL,
+ALTER COLUMN "surname2" DROP NOT NULL;
