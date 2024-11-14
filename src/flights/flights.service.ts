@@ -1,15 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
-import {
-  Flight,
-  Seats,
-  OriginDestination,
-} from './interfaces/flight.interface';
+import { Flight, OriginDestination } from './interfaces/flight.interface';
 import { ValidationService } from '../validation/validation.service';
 import { HttpException } from '@nestjs/common';
 import { NewsService } from './news.service';
 import { UtilitiesService } from './utilities.service';
-
+import { SeatsService } from './seats.service';
 @Injectable()
 export class FlightsService {
   constructor(
@@ -17,6 +13,7 @@ export class FlightsService {
     private validation: ValidationService,
     private newsService: NewsService,
     private utilities: UtilitiesService,
+    private seatsService: SeatsService,
   ) {}
 
   async findActualFlights() {
@@ -32,40 +29,6 @@ export class FlightsService {
 
   async findAllNews() {
     return await this.newsService.AllNews();
-  }
-
-  private async createSeatsConfiguration(
-    flightCode: string,
-    typeFlight: string,
-  ) {
-    // Configuración de los asientos del vuelo basado en el tipo (nacional o internacional)
-    const totalSeats = typeFlight.startsWith('n') ? 150 : 250;
-    const totalFirst = typeFlight.startsWith('n') ? 25 : 50;
-    const totalTourist = totalSeats - totalFirst;
-
-    const avaliableFirst = [...Array(totalFirst).keys()]
-      .map((i) => i + 1)
-      .toString();
-    const avaliableTourist = [...Array(totalTourist).keys()]
-      .map((i) => i + totalFirst + 1)
-      .toString();
-
-    // Creación de la configuración de asientos
-    const seats: Seats = {
-      flightCode: flightCode,
-      totalSeats,
-      totalFirst,
-      totalTourist,
-      avaliableFirst,
-      avaliableTourist,
-      busyFirst: [].toString(),
-      busyTourist: [].toString(),
-      erased: false,
-    };
-
-    await this.prisma.seats.create({
-      data: seats,
-    });
   }
   async createFlight(flight: Flight): Promise<any> {
     try {
@@ -137,7 +100,7 @@ export class FlightsService {
       });
 
       // Llamada a la función de creación de asientos
-      await this.createSeatsConfiguration(flightCode, typeFlight);
+      await this.seatsService.createSeatsConfiguration(flightCode, typeFlight);
 
       // Notificación de la creación del nuevo vuelo
       await this.notifyNewFlightCreation(newFlight);
@@ -422,13 +385,7 @@ export class FlightsService {
   }
   // Obtener la información de asientos de un vuelo
   async findSeatsByFlight(flightCode: string) {
-    const seats = await this.prisma.seats.findUnique({
-      where: { flightCode },
-    });
-    if (!seats) {
-      throw new HttpException('No se encontraron asientos.', 404);
-    }
-    return seats;
+    return await this.seatsService.findSeatsByFlight(flightCode);
   }
   // Obtener un vuelo específico
   async findFlightByCode(flightCode: string) {
