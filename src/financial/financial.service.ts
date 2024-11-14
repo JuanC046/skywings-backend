@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { HttpException } from '@nestjs/common';
-import { Card } from './interfaces/card';
+import { Card } from './interfaces/card.interface';
 @Injectable()
 export class FinancialService {
   constructor(private prisma: PrismaService) {}

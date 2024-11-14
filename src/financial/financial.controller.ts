@@ -9,7 +9,7 @@ import {
   Delete,
   UseGuards,
 } from '@nestjs/common';
-import { Card } from './interfaces/card';
+import { Card } from './interfaces/card.interface';
 import { FinancialService } from './financial.service';
 import { Role } from '../auth/decorator/roles.enum';
 import { Roles } from '../auth/decorator/roles.decorator';
