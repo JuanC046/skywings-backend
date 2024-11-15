@@ -60,6 +60,7 @@ export class AuthService {
     const payload = {
       username: user.username,
       email: user.email,
+      dni: user.dni,
       role: user.role,
     };
 
