@@ -17,37 +17,44 @@ import { AuthGuard } from '../auth/guard/auth.guard';
 import { RolesGuard } from '../auth/guard/auth.roles.guard';
 @ApiTags('flights')
 @Controller('flights')
-@Roles(Role.Admin)
-@UseGuards(AuthGuard, RolesGuard)
 export class FlightsController {
-  constructor(private readonly flightsService: FlightsService) {}
+  constructor(private flightsService: FlightsService) {}
 
   @Get()
   async findActualFlights(): Promise<any> {
     return this.flightsService.findActualFlights();
   }
-  @Get('/:flightCode')
+  @Get('news')
+  async findAllNews(): Promise<any> {
+    console.log('Ingresó a findAllNews');
+    return this.flightsService.findAllNews();
+  }
+  @Get('flight/:flightCode')
   async findFlightByCode(
     @Param('flightCode') flightCode: string,
   ): Promise<any> {
     return this.flightsService.findFlightByCode(flightCode);
   }
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.Admin)
   @Get('realized')
   async findRealizedFlights(): Promise<any> {
     return this.flightsService.findFlightsRealized();
   }
-  @Get('news')
-  async findAllNews(): Promise<any> {
-    return this.flightsService.findAllNews();
-  }
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.Admin)
   @Post('create')
   async newFlight(@Body() flightData: any): Promise<any> {
     return this.flightsService.createFlight(flightData);
   }
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.Admin)
   @Delete('delete')
   async deleteFlight(@Body() parameters: any): Promise<any> {
     return this.flightsService.deleteFlight(parameters.flightCode);
   }
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.Admin)
   @Patch('update')
   async updateFlight(@Body() flightData: any): Promise<any> {
     return this.flightsService.changeFlightPrice(flightData);
@@ -56,11 +63,11 @@ export class FlightsController {
   async findFlightsByRoute(@Body() route: OriginDestination): Promise<any> {
     return this.flightsService.findFlightsByRoute(route);
   }
+
   @Get('seats/:flightCode')
   async findSeatsByFlight(
     @Param('flightCode') flightCode: string,
   ): Promise<any> {
     return this.flightsService.findSeatsByFlight(flightCode);
   }
-  
 }

@@ -43,20 +43,69 @@ export class SeatsService {
     }
     return seats;
   }
-  async getSeatNumber(flightCode: string, seatClass: string) {
-    const seats = await this.findSeatsByFlight(flightCode);
-    if (!seats) {
-      throw new HttpException('Vuelo no encontrado', 404);
+  private listSeatsByType(
+    seatClass: string,
+    state: number,
+    seats: Seats,
+  ): number[] {
+    // Seat State 0: Available, 1: Busy
+    let seatsByType: string;
+    if (state === 0) {
+      seatsByType =
+        seatClass === 'Tourist' ? seats.avaliableTourist : seats.avaliableFirst;
+    } else {
+      seatsByType =
+        seatClass === 'Tourist' ? seats.busyTourist : seats.busyFirst;
     }
-    const availableSeats =
-      seatClass === 'Tourist'
-        ? Array(seats.avaliableTourist)
-        : Array(seats.avaliableFirst);
-    // Select a random item from the array
+    return seatsByType.split(',').map((i) => parseInt(i));
+  }
+
+  private bookingSeat(
+    seatNumber: number,
+    seatClass: string,
+    seats: Seats,
+  ): { availableSeats: number[]; busySeats: number[] } {
+    const availableSeats = this.listSeatsByType(seatClass, 0, seats);
+    availableSeats.splice(availableSeats.indexOf(seatNumber), 1);
+    const busySeats = this.listSeatsByType(seatClass, 1, seats);
+    busySeats.push(seatNumber);
+    return { availableSeats, busySeats };
+  }
+  private cancelSeat(
+    seatNumber: number,
+    seatClass: string,
+    seats: Seats,
+  ): { availableSeats: number[]; busySeats: number[] } {
+    const busySeats = this.listSeatsByType(seatClass, 1, seats);
+    busySeats.splice(busySeats.indexOf(seatNumber), 1);
+    const availableSeats = this.listSeatsByType(seatClass, 0, seats);
+    availableSeats.push(seatNumber);
+    return { availableSeats, busySeats };
+  }
+  private async updateSeats(seats: Seats) {
+    await this.prisma.seats.update({
+      where: { flightCode: seats.flightCode },
+      data: seats,
+    });
+  }
+  async assignSeat(flightCode: string, seatClass: string) {
+    const seats = await this.findSeatsByFlight(flightCode);
+    const availableSeats = this.listSeatsByType(seatClass, 0, seats);
+    if (availableSeats.length === 0) {
+      throw new HttpException('No hay asientos disponibles.', 404);
+    }
     const seatNumber =
       availableSeats[Math.floor(Math.random() * availableSeats.length)];
-    console.log('Available seats: ', availableSeats);
-    console.log('Seat number: ', seatNumber);
+    const { availableSeats: newAvailableSeats, busySeats: newBusySeats } =
+      this.bookingSeat(seatNumber, seatClass, seats);
+    if (seatClass === 'Tourist') {
+      seats.avaliableTourist = newAvailableSeats.toString();
+      seats.busyTourist = newBusySeats.toString();
+    } else {
+      seats.avaliableFirst = newAvailableSeats.toString();
+      seats.busyFirst = newBusySeats.toString();
+    }
+    await this.updateSeats(seats);
     return seatNumber;
   }
 }

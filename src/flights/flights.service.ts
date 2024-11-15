@@ -376,18 +376,17 @@ export class FlightsService {
     const { origin, destination } = originDestination;
     const flights = await this.prisma.flight.findMany({
       where: { origin, destination, erased: false },
-      select: { origin: true, destination: true, departureDate1: true },
     });
     if (!flights) {
       throw new HttpException('No se encontraron vuelos.', 404);
     }
     return flights;
   }
-  // Obtener la información de asientos de un vuelo
+
   async findSeatsByFlight(flightCode: string) {
     return await this.seatsService.findSeatsByFlight(flightCode);
   }
-  // Obtener un vuelo específico
+
   async findFlightByCode(flightCode: string) {
     const flight = await this.prisma.flight.findUnique({
       where: { code: flightCode },
