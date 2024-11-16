@@ -71,17 +71,6 @@ export class SeatsService {
     busySeats.push(seatNumber);
     return { availableSeats, busySeats };
   }
-  private cancelSeat(
-    seatNumber: number,
-    seatClass: string,
-    seats: Seats,
-  ): { availableSeats: number[]; busySeats: number[] } {
-    const busySeats = this.listSeatsByType(seatClass, 1, seats);
-    busySeats.splice(busySeats.indexOf(seatNumber), 1);
-    const availableSeats = this.listSeatsByType(seatClass, 0, seats);
-    availableSeats.push(seatNumber);
-    return { availableSeats, busySeats };
-  }
   private async updateSeats(seats: Seats) {
     await this.prisma.seats.update({
       where: { flightCode: seats.flightCode },
@@ -108,4 +97,17 @@ export class SeatsService {
     await this.updateSeats(seats);
     return seatNumber;
   }
+
+  // private cancelSeat(
+  //   seatNumber: number,
+  //   seatClass: string,
+  //   seats: Seats,
+  // ): { availableSeats: number[]; busySeats: number[] } {
+  //   const busySeats = this.listSeatsByType(seatClass, 1, seats);
+  //   busySeats.splice(busySeats.indexOf(seatNumber), 1);
+  //   const availableSeats = this.listSeatsByType(seatClass, 0, seats);
+  //   availableSeats.push(seatNumber);
+  //   return { availableSeats, busySeats };
+  // }
+  // async freeUpSeat(seatNumber: number, flightCode: string){}
 }

@@ -125,7 +125,7 @@ export class TicketService {
       );
     }
   }
-  private async isVigentFlight(flightCode: string) {
+  private async isFlightValid(flightCode: string) {
     const vigentsFlights = await this.flightsService.findActualFlights();
     const vigentFlight = vigentsFlights.find(
       (flight) => flight.code === flightCode,
@@ -139,7 +139,7 @@ export class TicketService {
     username: string,
     flightCode: string,
   ) {
-    await this.isVigentFlight(flightCode);
+    await this.isFlightValid(flightCode);
     let listPassengers: Passenger[] = this.mergePassengers(
       listTickets,
       flightCode,
@@ -217,5 +217,57 @@ export class TicketService {
       throw new HttpException('Ticket no encontrado.', 404);
     }
     return ticket;
+  }
+  private async findReservedTicketsByUser(username: string) {
+    const tickets = await this.prisma.ticket.findMany({
+      where: {
+        username,
+        purchaseId: 0,
+      },
+    });
+    return tickets;
+  }
+  private async deleteTicket(ticket: Ticket) {
+    try {
+      await this.prisma.ticket.delete({
+        where: {
+          flightCode_passengerDni: {
+            flightCode: ticket.flightCode,
+            passengerDni: ticket.passengerDni,
+          },
+        },
+      });
+    } catch (error) {
+      console.error(error);
+      throw new HttpException('Error al borrar el ticket.', 500);
+    }
+  }
+  private async isReservedTicketValid(ticket: Ticket) {
+    const currentDate = new Date();
+    const flight = await this.flightsService.findFlightByCode(
+      ticket.flightCode,
+    );
+    const departureDate = new Date(flight.departureDate1);
+    const difference = departureDate.getTime() - currentDate.getTime();
+    const hoursDifference = difference / (1000 * 3600);
+    const creationDate = new Date(ticket.creationDate);
+    const expiredReservation = currentDate.getTime() - creationDate.getTime();
+    const hoursExpired = expiredReservation / (1000 * 3600);
+    if (flight.erased || hoursDifference < 1 || hoursExpired > 24) {
+      return false;
+    }
+    return true;
+  }
+  async findReservations(username: string) {
+    const tickets = await this.findReservedTicketsByUser(username);
+    const validTickets: Ticket[] = [];
+    for (const ticket of tickets) {
+      const isValid = await this.isReservedTicketValid(ticket);
+      if (!isValid) {
+        await this.deleteTicket(ticket);
+      }
+      validTickets.push(ticket);
+    }
+    return validTickets;
   }
 }
