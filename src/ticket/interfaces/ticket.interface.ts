@@ -3,7 +3,7 @@ export interface Ticket {
   flightCode: string;
   passengerDni: string;
   username: string;
-  purchaseId: number;
+  purchaseId?: number;
   seatNumber: number;
   price: number;
   creationDate: Date;
@@ -14,6 +14,5 @@ export interface Ticket {
 
 export interface TicketsData {
   username: string;
-  purchaseId: number; // 0: Booking, otherwise: Purchase
   listTickets: PassengersData[];
 }

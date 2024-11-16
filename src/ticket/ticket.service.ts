@@ -31,7 +31,6 @@ export class TicketService {
     username: string,
     passenger: Passenger,
     seatClass: string,
-    purchaseId: number,
   ): Promise<Ticket> {
     const seatNumber = await this.seatsService.assignSeat(
       flightCode,
@@ -45,7 +44,6 @@ export class TicketService {
       passengerDni: passenger.dni,
       username,
       seatNumber,
-      purchaseId,
       price,
       creationDate: new Date(),
       numSuitcase: 0,
@@ -117,7 +115,6 @@ export class TicketService {
     return passengersDni.map((passenger) => passenger.passengerDni);
   }
 
-
   private validatePassengersAges(passengers: Passenger[], flightCode: string) {
     const validPassengers =
       this.passengerService.validatePassengersAges(passengers);
@@ -128,11 +125,21 @@ export class TicketService {
       );
     }
   }
+  private async isVigentFlight(flightCode: string) {
+    const vigentsFlights = await this.flightsService.findActualFlights();
+    const vigentFlight = vigentsFlights.find(
+      (flight) => flight.code === flightCode,
+    );
+    if (!vigentFlight) {
+      throw new HttpException('El vuelo no se encuentra vigente.', 400);
+    }
+  }
   private async validateTickets(
     listTickets: PassengersData[],
     username: string,
     flightCode: string,
   ) {
+    await this.isVigentFlight(flightCode);
     let listPassengers: Passenger[] = this.mergePassengers(
       listTickets,
       flightCode,
@@ -153,7 +160,6 @@ export class TicketService {
   }
   private async createPassengerTickets(
     passengersData: PassengersData,
-    purchaseId: number,
     username: string,
   ) {
     const { flightCode, seatClass, passengers } = passengersData;
@@ -169,7 +175,6 @@ export class TicketService {
           username,
           passengerCreated,
           seatClass,
-          purchaseId,
         );
         tickets.push(ticket);
       }
@@ -183,7 +188,7 @@ export class TicketService {
     }
   }
   async createTickets(ticketsData: TicketsData) {
-    const { username, purchaseId, listTickets } = ticketsData;
+    const { username, listTickets } = ticketsData;
     const repeatedFlights = this.findRepeatedFlight(listTickets);
     if (repeatedFlights.length > 0) {
       for (const flightCode of repeatedFlights) {
@@ -194,7 +199,6 @@ export class TicketService {
     for (const passengersData of listTickets) {
       const passengerTickets = await this.createPassengerTickets(
         passengersData,
-        purchaseId,
         username,
       );
       tickets.push(...passengerTickets);
