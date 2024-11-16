@@ -1,4 +1,4 @@
-import { Controller, Body, Post } from '@nestjs/common';
+import { Controller, Body, Post, Get, Param } from '@nestjs/common';
 import { TicketService } from './ticket.service';
 import { TicketsData } from './interfaces/ticket.interface';
 
@@ -10,4 +10,13 @@ export class TicketController {
   async createTickets(@Body() ticketsData: TicketsData): Promise<any> {
     return this.ticketService.createTickets(ticketsData);
   }
+
+  @Get('/ticket/:flightCode/:passengerDni')
+  async findTicket(
+    @Param('flightCode') flightCode: string,
+    @Param('passengerDni') passengerDni: string,
+  ): Promise<any> {
+    return this.ticketService.findTicket(flightCode, passengerDni);
+  }
+
 }

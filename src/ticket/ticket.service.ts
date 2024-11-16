@@ -79,7 +79,7 @@ export class TicketService {
     }
     return passengers;
   }
-  async flightTicketsOfUser(username: string, flightCode: string) {
+  private async flightTicketsOfUser(username: string, flightCode: string) {
     const tickets = await this.prisma.ticket.findMany({
       where: {
         flightCode,
@@ -200,5 +200,18 @@ export class TicketService {
       tickets.push(...passengerTickets);
     }
     return tickets;
+  }
+
+  async findTicket(flightCode: string, passengerDni: string) {
+    const ticket = await this.prisma.ticket.findFirst({
+      where: {
+        flightCode,
+        passengerDni,
+      },
+    });
+    if (!ticket) {
+      throw new HttpException('Ticket no encontrado.', 404);
+    }
+    return ticket;
   }
 }
