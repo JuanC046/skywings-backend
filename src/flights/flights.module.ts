@@ -17,5 +17,6 @@ import { SeatsService } from './seats.service';
     SeatsService
   ],
   controllers: [FlightsController],
+  exports: [ValidationService, UtilitiesService, NewsService, SeatsService],
 })
 export class FlightsModule {}

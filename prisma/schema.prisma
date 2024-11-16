@@ -99,21 +99,21 @@ model passenger {
   @@id([dni, flightCode])
   ticket ticket[]
 }
-model ticket {
-  flightPassenger   passenger   @relation(fields: [flightCode, passangerDni], references: [flightCode, dni])
+model ticket { // Usar tiket ID y poner la referencia en pasajero id incremental
+  flightPassenger   passenger   @relation(fields: [flightCode, passengerDni], references: [flightCode, dni])
   flightCode        String
-  passangerDni      String
+  passengerDni      String
   user              User     @relation(fields: [username], references: [username])
   username          String
-  purchase          purchases @relation(fields: [purchaseId], references: [id])
   purchaseId        Int @default(0)
-  seatNumber        String
+  seatNumber        Int
   price             Float
-  checkIn           DateTime
+  creationDate      DateTime
+  checkIn           DateTime?
   numSuitcase       Int
-  erased            Boolean  @default(false)
+  erased            Boolean?  @default(false)
 
-  @@id([flightCode, passangerDni])
+  @@id([flightCode, passengerDni])
 }
 
 model cards {
@@ -148,6 +148,4 @@ model purchases {
   paymentId           Int
   creationDate        DateTime
   status              String
-
-  ticket ticket[]
 }
