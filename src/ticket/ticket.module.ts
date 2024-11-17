@@ -16,5 +16,6 @@ import { PassengerService } from './passenger.service';
     PassengerService,
   ],
   imports: [FlightsModule],
+  exports: [PassengerService],
 })
 export class TicketModule {}

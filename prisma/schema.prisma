@@ -115,7 +115,6 @@ model ticket { // Usar tiket ID y poner la referencia en pasajero id incremental
 
   @@id([flightCode, passengerDni])
 }
-
 model cards {
   number              String  @id @unique
   user                User    @relation(fields: [propietary], references: [dni])
@@ -126,17 +125,6 @@ model cards {
   type                String
   erased              Boolean  @default(false)
 
-  payments payments[]
-}
-
-model payments {
-  id                  Int      @id @default(autoincrement())
-  card                cards    @relation(fields: [cardNumber], references: [number])
-  cardNumber          String
-  total               Int
-  fees                Int?
-  status              String
-
   purchases purchases[]
 }
 
@@ -144,8 +132,9 @@ model purchases {
   id                  Int      @id @default(autoincrement())
   user                User     @relation(fields: [username], references: [username])
   username            String
-  payment             payments @relation(fields: [paymentId], references: [id])
-  paymentId           Int
+  card                cards    @relation(fields: [cardNumber], references: [number])
+  cardNumber          String
+  total               Float
   creationDate        DateTime
-  status              String
+  status              String?
 }

@@ -6,6 +6,7 @@ import { AuthModule } from './auth/auth.module';
 import { FlightsModule } from './flights/flights.module';
 import { FinancialModule } from './financial/financial.module';
 import { TicketModule } from './ticket/ticket.module';
+import { PurchaseModule } from './purchase/purchase.module';
 
 @Module({
   providers: [AppService],
@@ -15,6 +16,7 @@ import { TicketModule } from './ticket/ticket.module';
     FlightsModule,
     FinancialModule,
     TicketModule,
+    PurchaseModule,
   ],
   controllers: [AppController],
 })

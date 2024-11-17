@@ -211,4 +211,23 @@ export class FinancialService {
       throw new HttpException('Error en la eliminación de la tarjeta', 400);
     }
   }
+  async payment(cardNumber: string, cvv: string, total: number): Promise<void> {
+    const card: Card = await this.findCard(cardNumber);
+    this.isPositiveNumber(total, 'total');
+    if (card.cvv !== cvv) {
+      throw new HttpException('El cvv no coincide', 400);
+    }
+    if (card.balance < total) {
+      throw new HttpException('Saldo insuficiente', 400);
+    }
+    const newBalance = card.balance - total;
+    await this.prisma.cards.update({
+      where: {
+        number: cardNumber,
+      },
+      data: {
+        balance: newBalance,
+      },
+    });
+  }
 }

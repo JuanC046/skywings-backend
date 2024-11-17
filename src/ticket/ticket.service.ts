@@ -270,4 +270,26 @@ export class TicketService {
     }
     return validTickets;
   }
+  async setTicketPurchaseId(
+    flightCode: string,
+    passengerDni: string,
+    purchaseId: number,
+  ) {
+    try {
+      await this.prisma.ticket.update({
+        where: {
+          flightCode_passengerDni: {
+            flightCode,
+            passengerDni,
+          },
+        },
+        data: {
+          purchaseId,
+        },
+      });
+    } catch (error) {
+      console.error(error);
+      throw new HttpException('Error al asignar el id de la compra.', 500);
+    }
+  }
 }
