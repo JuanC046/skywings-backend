@@ -24,4 +24,8 @@ export class TicketController {
   async findReservations(@Param('username') username: string): Promise<any> {
     return this.ticketService.findReservations(username);
   }
+  @Get('history/:username')
+  async findHistory(@Param('username') username: string): Promise<any> {
+    return this.ticketService.userTickets(username);
+  }
 }

@@ -315,4 +315,13 @@ export class TicketService {
       throw new HttpException('Error al asignar el id de la compra.', 500);
     }
   }
+  async userTickets(username: string): Promise<Ticket[]> {
+    const tickets: Ticket[] = await this.prisma.ticket.findMany({
+      where: {
+        username,
+        purchaseId: { not: 0 },
+      },
+    });
+    return tickets;
+  }
 }
