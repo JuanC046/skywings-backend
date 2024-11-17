@@ -187,8 +187,31 @@ export class TicketService {
       throw new HttpException('Error al crear los tickets.', 500);
     }
   }
+  private async validatePassengers(listTickets: PassengersData[]) {
+    for (const passengersData of listTickets) {
+      const { flightCode, passengers } = passengersData;
+      const passengersDni = passengers.map((passenger) => passenger.dni);
+      const passengersInDataBase =
+        await this.passengerService.getPassengersByFlightCode(
+          passengersDni,
+          flightCode,
+        );
+      const passengersDniInDataBase = passengersInDataBase.map(
+        (passenger) => passenger.dni,
+      );
+      for (const passenger of passengers) {
+        if (passengersDniInDataBase.includes(passenger.dni)) {
+          throw new HttpException(
+            `El pasajero con dni ${passenger.dni} ya se encuentra registrado en el vuelo ${flightCode}.`,
+            400,
+          );
+        }
+      }
+    }
+  }
   async createTickets(ticketsData: TicketsData) {
     const { username, listTickets } = ticketsData;
+    await this.validatePassengers(listTickets);
     const repeatedFlights = this.findRepeatedFlight(listTickets);
     if (repeatedFlights.length > 0) {
       for (const flightCode of repeatedFlights) {
