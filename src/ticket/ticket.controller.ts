@@ -28,4 +28,10 @@ export class TicketController {
   async findHistory(@Param('username') username: string): Promise<any> {
     return this.ticketService.userTickets(username);
   }
+  @Get('purchase/:purchaseId')
+  async findTicketsByPurchase(
+    @Param('purchaseId') purchaseId: number,
+  ): Promise<any> {
+    return this.ticketService.findTicketsByPurchaseId(purchaseId);
+  }
 }

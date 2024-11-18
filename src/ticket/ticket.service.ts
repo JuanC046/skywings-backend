@@ -133,6 +133,7 @@ export class TicketService {
     if (!vigentFlight) {
       throw new HttpException('El vuelo no se encuentra vigente.', 400);
     }
+    return vigentFlight;
   }
   private async validateTickets(
     listTickets: PassengersData[],
@@ -324,4 +325,63 @@ export class TicketService {
     });
     return tickets;
   }
+  private async cancelPurchasedTicket(
+    flightCode: string,
+    passengerDni: string,
+  ) {
+    try {
+      await this.prisma.ticket.update({
+        where: {
+          flightCode_passengerDni: {
+            flightCode,
+            passengerDni,
+          },
+        },
+        data: {
+          erased: true,
+        },
+      });
+    } catch (error) {
+      console.error(error);
+      throw new HttpException('Error al cancelar el ticket.', 500);
+    }
+  }
+  private async isTimeToCancel(ticket: Ticket) {
+    if (ticket.erased) {
+      throw new HttpException('El ticket ya ha sido cancelado.', 400);
+    }
+    const currentDate = new Date();
+    const flight = await this.flightsService.findFlightByCode(
+      ticket.flightCode,
+    );
+    const departureDate = new Date(flight.departureDate1);
+    const difference = departureDate.getTime() - currentDate.getTime();
+    const hoursDifference = difference / (1000 * 3600);
+    if (hoursDifference < 1) {
+      throw new HttpException('Ya no es posible cancelar el ticket.', 400);
+    }
+  }
+  async cancelTicket(ticket: Ticket) {
+    if (ticket.purchaseId !== 0) {
+      await this.isTimeToCancel(ticket);
+      await this.cancelPurchasedTicket(ticket.flightCode, ticket.passengerDni);
+    } else {
+      await this.deleteTicket(ticket);
+    }
+  }
+  async findTicketsByPurchaseId(purchaseId: number): Promise<Ticket[]> {
+    try{
+      purchaseId = Number(purchaseId);
+      const tickets = await this.prisma.ticket.findMany({
+        where: {
+          purchaseId,
+        },
+      });
+      return tickets;
+    } catch (error) {
+      console.error(error);
+      throw new HttpException('Error al buscar los tickets.', 500);
+    }
+  }
+    
 }

@@ -230,4 +230,17 @@ export class FinancialService {
       },
     });
   }
+  async refund(cardNumber: string, total: number): Promise<void> {
+    const card: Card = await this.findCard(cardNumber);
+    this.isPositiveNumber(total, 'total');
+    const newBalance = card.balance + total;
+    await this.prisma.cards.update({
+      where: {
+        number: cardNumber,
+      },
+      data: {
+        balance: newBalance,
+      },
+    });
+  }
 }

@@ -81,4 +81,41 @@ export class PurchaseService {
       throw new HttpException('Error al procesar la compra', 500);
     }
   }
+  async finfPurchase(id: number): Promise<Purchase> {
+    try {
+      return await this.prisma.purchases.findUnique({
+        where: {
+          id,
+        },
+      });
+    } catch (error) {
+      console.error(error);
+      throw new HttpException('Error al buscar la compra', 500);
+    }
+  }
+  async userPurchases(username: string): Promise<Purchase[]> {
+    try {
+      return await this.prisma.purchases.findMany({
+        where: {
+          username,
+        },
+      });
+    } catch (error) {
+      console.error(error);
+      throw new HttpException('Error al buscar las compras', 500);
+    }
+  }
+  async cancelTicket(ticketId: TicketId): Promise<any> {
+    const { flightCode, passengerDni } = ticketId;
+    const ticket = await this.ticketService.findTicket(
+      flightCode,
+      passengerDni,
+    );
+    await this.ticketService.cancelTicket(ticket);
+    if (ticket.purchaseId !== 0) {
+      const purchase = await this.finfPurchase(ticket.purchaseId);
+      await this.financialService.refund(purchase.cardNumber, purchase.total);
+    }
+    return { message: 'Ticket cancelled' };
+  }
 }
