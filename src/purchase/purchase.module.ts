@@ -1,6 +1,9 @@
 import { Module } from '@nestjs/common';
 import { PurchaseService } from './purchase.service';
-import { PurchaseController } from './purchase.controller';
+import {
+  PurchaseController,
+  cancelTicketController,
+} from './purchase.controller';
 import { PrismaService } from '../prisma.service';
 import { TicketService } from '../ticket/ticket.service';
 import { FinancialService } from '../financial/financial.service';
@@ -17,7 +20,7 @@ import { FlightsService } from 'src/flights/flights.service';
     FinancialService,
     FlightsService,
   ],
-  controllers: [PurchaseController],
+  controllers: [PurchaseController, cancelTicketController],
   imports: [TicketModule, FinancialModule, FlightsModule],
 })
 export class PurchaseModule {}

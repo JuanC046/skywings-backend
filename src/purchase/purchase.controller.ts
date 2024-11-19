@@ -20,7 +20,12 @@ export class PurchaseController {
   async findAll(@Param('username') username: string): Promise<any> {
     return this.purchaseService.userPurchases(username);
   }
-  @Delete('cancelTicket')
+}
+@Controller('tickets')
+export class cancelTicketController {
+  constructor(private readonly purchaseService: PurchaseService) {}
+
+  @Delete('cancel')
   async cancelTicket(@Body() ticketId: TicketId): Promise<any> {
     return this.purchaseService.cancelTicket(ticketId);
   }
