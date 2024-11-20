@@ -79,4 +79,20 @@ export class PassengerService {
       throw new HttpException('Error al crear el pasajero.', 500);
     }
   }
+  async findPassenger(flightCode: string, passengerDni: string) {
+    try {
+      const passenger = await this.prisma.passenger.findUnique({
+        where: {
+          dni_flightCode: {
+            dni: passengerDni,
+            flightCode,
+          },
+        },
+      });
+      return passenger;
+    } catch (error) {
+      console.error(error);
+      throw new HttpException('Error al obtener el pasajero.', 500);
+    }
+  }
 }

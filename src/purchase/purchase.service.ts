@@ -61,6 +61,30 @@ export class PurchaseService {
       throw new HttpException('Error al registrar la compra', 500);
     }
   }
+  private async notifyPassengersAfterPurchase(
+    tickets: TicketId[],
+  ): Promise<any> {
+    try {
+      for (const ticket of tickets) {
+        const ticketData = await this.ticketService.findTicket(
+          ticket.flightCode,
+          ticket.passengerDni,
+        );
+        const passenger = await this.ticketService.findPassenger(
+          ticket.flightCode,
+          ticket.passengerDni,
+        );
+        await this.emailService.sendEmail(
+          passenger.email,
+          'Compra de billete',
+          `Estimado/a ${passenger.name1} ${passenger.surname1}, le informamos que se ha realizado la compra del billete para el vuelo ${ticket.flightCode}. Su asiento es el ${ticketData.seatNumber}. Gracias por confiar en nosotros.`,
+        );
+      }
+    } catch (error) {
+      console.error(error);
+      throw new HttpException('Error al notificar a los pasajeros', 500);
+    }
+  }
   async createPurchase(purchaseData: PurchasesData): Promise<PurchaseResponse> {
     const { username, cardNumber, cvv, tickets } = purchaseData;
     try {
@@ -75,6 +99,7 @@ export class PurchaseService {
       const createdPurchase: Purchase =
         await this.createPurchaseInDataBase(purchase);
       await this.setPurchaseId(createdPurchase.id, tickets);
+      await this.notifyPassengersAfterPurchase(tickets);
       const purchaseResponse: PurchaseResponse = {
         purchase: createdPurchase,
         totalTickets: tickets.length,
@@ -140,7 +165,6 @@ export class PurchaseService {
   private async notifyUsers(users: string[], flightCode: string): Promise<any> {
     try {
       for (const username of users) {
-        console.log('Notificando a', username);
         const user = await this.userService.findUser({ username });
         await this.emailService.sendEmail(
           user.email,

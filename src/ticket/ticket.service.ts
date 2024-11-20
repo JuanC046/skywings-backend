@@ -496,4 +496,11 @@ export class TicketService {
       return false;
     }
   }
+  async findPassenger(flightCode: string, passengerDni: string) {
+    const passenger = await this.passengerService.findPassenger(
+      flightCode,
+      passengerDni,
+    );
+    return passenger;
+  }
 }
