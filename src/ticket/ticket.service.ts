@@ -6,6 +6,7 @@ import { Injectable } from '@nestjs/common';
 import { SeatsService } from 'src/flights/seats.service';
 import { FlightsService } from 'src/flights/flights.service';
 import { PassengerService } from './passenger.service';
+import { EmailService } from 'src/email/email.service';
 @Injectable()
 export class TicketService {
   constructor(
@@ -13,6 +14,7 @@ export class TicketService {
     private flightsService: FlightsService,
     private seatsService: SeatsService,
     private passengerService: PassengerService,
+    private emailService: EmailService,
   ) {}
 
   private async createTicketInDataBase(ticket: Ticket) {
@@ -428,6 +430,70 @@ export class TicketService {
     } catch (error) {
       console.error(error);
       throw new HttpException('Error al buscar los tickets.', 500);
+    }
+  }
+  private async calculateRefoundEachPurchase(tickets: Ticket[]) {
+    // create a map with the purchaseId as key and the total of the purchase as value
+    const refoudEachpurchase: Map<number, number> = new Map();
+    for (const ticket of tickets) {
+      if (ticket.purchaseId === 0) {
+        continue;
+      }
+      if (refoudEachpurchase.has(ticket.purchaseId)) {
+        const total = refoudEachpurchase.get(ticket.purchaseId) + ticket.price;
+        refoudEachpurchase.set(ticket.purchaseId, total);
+      } else {
+        refoudEachpurchase.set(ticket.purchaseId, ticket.price);
+      }
+    }
+    return refoudEachpurchase;
+  }
+  private async ticketsOfFlight(flightCode: string) {
+    const tickets = await this.prisma.ticket.findMany({
+      where: {
+        flightCode,
+        erased: false,
+      },
+    });
+    return tickets;
+  }
+  private async notifyPassengersFlightCancelation(
+    passengers: Passenger[],
+    flightCode: string,
+  ) {
+    // Send email to each passenger
+    try {
+      const flight = await this.flightsService.findFlightByCode(flightCode);
+      for (const passenger of passengers) {
+        const recipientEmail = passenger.email;
+        const subject = 'Vuelo cancelado';
+        const text = `Hola ${passenger.name1} ${passenger.surname1}, lamentamos informarte que el vuelo ${flight.origin} - ${flight.destination} con fecha ${flight.departureDate1} ha sido cancelado.`;
+        await this.emailService.sendEmail(recipientEmail, subject, text);
+      }
+    } catch (error) {
+      console.error(error);
+      throw new HttpException('Error al enviar el email a los pasajeros.', 500);
+    }
+  }
+  async cancelFlight(flightCode: string) {
+    try {
+      await this.flightsService.deleteFlight(flightCode);
+      const tickets = await this.ticketsOfFlight(flightCode);
+      const refoundEachPurchase =
+        await this.calculateRefoundEachPurchase(tickets);
+      const passengersDni = tickets.map((ticket) => ticket.passengerDni);
+      const passengers = await this.passengerService.getPassengersByFlightCode(
+        passengersDni,
+        flightCode,
+      );
+      for (const ticket of tickets) {
+        await this.cancelTicket(ticket);
+      }
+      await this.notifyPassengersFlightCancelation(passengers, flightCode);
+      return refoundEachPurchase;
+    } catch (error) {
+      console.error(error);
+      return false;
     }
   }
 }
