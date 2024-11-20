@@ -370,7 +370,7 @@ export class TicketService {
     }
   }
   async findTicketsByPurchaseId(purchaseId: number): Promise<Ticket[]> {
-    try{
+    try {
       purchaseId = Number(purchaseId);
       const tickets = await this.prisma.ticket.findMany({
         where: {
@@ -383,5 +383,51 @@ export class TicketService {
       throw new HttpException('Error al buscar los tickets.', 500);
     }
   }
-    
+  private async purchasedTickets(username: string): Promise<Ticket[]> {
+    const tickets = await this.prisma.ticket.findMany({
+      where: {
+        username,
+        purchaseId: { not: 0 },
+        erased: false,
+      },
+    });
+    return tickets;
+  }
+  private flightsOfTickets(tickets: Ticket[]) {
+    const flights: string[] = [];
+    for (const ticket of tickets) {
+      if (!flights.includes(ticket.flightCode)) {
+        flights.push(ticket.flightCode);
+      }
+    }
+    return flights;
+  }
+  private async currentFlightsOfTickets(flights: string[]) {
+    const currentFlights: string[] = [];
+    const actualFlights = await this.flightsService.findActualFlights();
+    for (const flight of actualFlights) {
+      if (flights.includes(flight.code)) {
+        currentFlights.push(flight.code);
+      }
+    }
+    return currentFlights;
+  }
+  async findActiveTickets(username: string): Promise<Ticket[]> {
+    // Return tickets where erased is false, purchaseId is not 0 and flight is not leaved
+    try {
+      const tickets = await this.purchasedTickets(username);
+      const flights = this.flightsOfTickets(tickets);
+      const currentFlights = await this.currentFlightsOfTickets(flights);
+      const activeTickets: Ticket[] = [];
+      for (const ticket of tickets) {
+        if (currentFlights.includes(ticket.flightCode)) {
+          activeTickets.push(ticket);
+        }
+      }
+      return activeTickets;
+    } catch (error) {
+      console.error(error);
+      throw new HttpException('Error al buscar los tickets.', 500);
+    }
+  }
 }

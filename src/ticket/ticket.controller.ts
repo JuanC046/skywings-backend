@@ -34,4 +34,8 @@ export class TicketController {
   ): Promise<any> {
     return this.ticketService.findTicketsByPurchaseId(purchaseId);
   }
+  @Get('active/:username')
+  async findActiveTickets(@Param('username') username: string): Promise<any> {
+    return this.ticketService.findActiveTickets(username);
+  }
 }
