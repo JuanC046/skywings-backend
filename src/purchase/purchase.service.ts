@@ -8,12 +8,16 @@ import { Injectable, HttpException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 import { TicketService } from 'src/ticket/ticket.service';
 import { FinancialService } from 'src/financial/financial.service';
+import { UserService } from 'src/users/user.service';
+import { EmailService } from 'src/email/email.service';
 @Injectable()
 export class PurchaseService {
   constructor(
     private prisma: PrismaService,
     private ticketService: TicketService,
     private financialService: FinancialService,
+    private userService: UserService,
+    private emailService: EmailService,
   ) {}
   private async totalPrice(tickets: TicketId[]): Promise<number> {
     try {
@@ -81,7 +85,7 @@ export class PurchaseService {
       throw new HttpException('Error al procesar la compra', 500);
     }
   }
-  async finfPurchase(id: number): Promise<Purchase> {
+  async findPurchase(id: number): Promise<Purchase> {
     try {
       return await this.prisma.purchases.findUnique({
         where: {
@@ -113,9 +117,60 @@ export class PurchaseService {
     );
     await this.ticketService.cancelTicket(ticket);
     if (ticket.purchaseId !== 0) {
-      const purchase = await this.finfPurchase(ticket.purchaseId);
+      const purchase = await this.findPurchase(ticket.purchaseId);
       await this.financialService.refund(purchase.cardNumber, purchase.total);
     }
     return { message: 'Ticket cancelled' };
+  }
+  private async usersOfPurchases(purchasesId: number[]): Promise<string[]> {
+    try {
+      const users: string[] = [];
+      for (const purchaseId of purchasesId) {
+        const purchase = await this.findPurchase(purchaseId);
+        if (!users.includes(purchase.username)) {
+          users.push(purchase.username);
+        }
+      }
+      return users;
+    } catch (error) {
+      console.error(error);
+      throw new HttpException('Error al buscar los usuarios', 500);
+    }
+  }
+  private async notifyUsers(users: string[], flightCode: string): Promise<any> {
+    try {
+      for (const username of users) {
+        console.log('Notificando a', username);
+        const user = await this.userService.findUser({ username });
+        await this.emailService.sendEmail(
+          user.email,
+          'Vuelo cancelado',
+          `Estimado/a ${user.name1} ${user.surname1}, lamentamos informarle que el vuelo ${flightCode} ha sido cancelado. Se le ha reembolsado el importe de la compra. Gracias por confiar en nosotros`,
+        );
+      }
+    } catch (error) {
+      console.error(error);
+      throw new HttpException('Error al notificar a los usuarios', 500);
+    }
+  }
+  async cancelFlight(flightCode: string): Promise<any> {
+    const refoundEachPurchase =
+      await this.ticketService.cancelFlight(flightCode);
+    if (refoundEachPurchase === false) {
+      throw new HttpException('Error al cancelar el vuelo', 500);
+    }
+    if (refoundEachPurchase.size > 0) {
+      const purchasesId: number[] = [];
+      for (const purchaseId of refoundEachPurchase.keys()) {
+        const purchase = await this.findPurchase(purchaseId);
+        await this.financialService.refund(purchase.cardNumber, purchase.total);
+        purchasesId.push(Number(purchaseId));
+      }
+      await this.notifyUsers(
+        await this.usersOfPurchases(purchasesId),
+        flightCode,
+      );
+    }
+    return { message: 'Flight cancelled' };
   }
 }

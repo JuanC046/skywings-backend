@@ -3,7 +3,7 @@ import { PurchaseService } from './purchase.service';
 import {
   PurchasesData,
   PurchaseResponse,
-  TicketId
+  TicketId,
 } from './interfaces/purchase.interface';
 import { ApiTags } from '@nestjs/swagger';
 
@@ -22,11 +22,20 @@ export class PurchaseController {
   }
 }
 @Controller('tickets')
-export class cancelTicketController {
+export class CancelTicketController {
   constructor(private readonly purchaseService: PurchaseService) {}
 
   @Delete('cancel')
   async cancelTicket(@Body() ticketId: TicketId): Promise<any> {
     return this.purchaseService.cancelTicket(ticketId);
+  }
+}
+@Controller('flights')
+export class CancelFlightController {
+  constructor(private readonly purchaseService: PurchaseService) {}
+
+  @Delete('delete')
+  async deleteFlight(@Body() parameters: any): Promise<any> {
+    return this.purchaseService.cancelFlight(parameters.flightCode);
   }
 }

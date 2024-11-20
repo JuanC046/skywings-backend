@@ -231,9 +231,6 @@ export class FlightsService {
       creationDate,
     });
   }
-  async notifyPassangers(flightCode: string, message: string) {
-    console.log(message, flightCode);
-  }
   // Eliminar/cancelar vuelo
   async deleteFlight(flightCode: string) {
     // Buscar el vuelo a eliminar
@@ -268,8 +265,6 @@ export class FlightsService {
         data: { erased: true },
       });
       await this.newsService.deleteNews(flightCode);
-      await this.notifyPassangers(flightCode, 'Vuelo cancelado.');
-      return true;
     } catch (error) {
       console.error('Error al cancelar el vuelo:', error.message);
       throw new HttpException('Error al cancelar el vuelo.', 500);
