@@ -19,6 +19,22 @@ export class PurchaseService {
     private userService: UserService,
     private emailService: EmailService,
   ) {}
+  // verificar que los tiquetes no se hayan comprado
+  private async checkTicketsAvailability(tickets: TicketId[]): Promise<any> {
+    for (const ticket of tickets) {
+      const ticketData = await this.ticketService.findTicket(
+        ticket.flightCode,
+        ticket.passengerDni,
+      );
+      if (ticketData.purchaseId !== 0) {
+        throw new HttpException(
+          `El tiquete del vuelo ${ticketData.flightCode} del pasajero ${ticketData.passengerDni} ya ha sido comprado`,
+          400,
+        );
+      }
+    }
+  }
+
   private async totalPrice(tickets: TicketId[]): Promise<number> {
     try {
       let total = 0;
@@ -87,6 +103,7 @@ export class PurchaseService {
   }
   async createPurchase(purchaseData: PurchasesData): Promise<PurchaseResponse> {
     const { username, cardNumber, cvv, tickets } = purchaseData;
+    await this.checkTicketsAvailability(tickets);
     try {
       const total = await this.totalPrice(tickets);
       await this.financialService.payment(cardNumber, cvv, total);

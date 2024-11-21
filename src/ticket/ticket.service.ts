@@ -41,6 +41,7 @@ export class TicketService {
     const flight = await this.flightsService.findFlightByCode(flightCode);
     const price =
       seatClass === 'First' ? flight.priceFirstClass : flight.priceEconomyClass;
+    const numSuitcase = seatClass === 'First' ? 2 : 1;
     const ticket: Ticket = {
       flightCode,
       passengerDni: passenger.dni,
@@ -48,7 +49,7 @@ export class TicketService {
       seatNumber,
       price,
       creationDate: new Date(),
-      numSuitcase: 0,
+      numSuitcase,
     };
     await this.createTicketInDataBase(ticket);
     return ticket;
