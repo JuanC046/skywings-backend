@@ -11,7 +11,7 @@ export interface Passenger {
   email: string;
   contactName: string;
   contactPhone: string;
-  erased: boolean;
+  erased?: boolean;
 }
 export interface PassengersData {
   flightCode: string;
