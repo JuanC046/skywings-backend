@@ -407,8 +407,12 @@ export class TicketService {
   private async currentFlightsOfTickets(flights: string[]) {
     const currentFlights: string[] = [];
     const actualFlights = await this.flightsService.findActualFlights();
+    const currentDate = new Date();
     for (const flight of actualFlights) {
-      if (flights.includes(flight.code)) {
+      const departureDate = new Date(flight.departureDate1);
+      const difference = departureDate.getTime() - currentDate.getTime();
+      const hoursDifference = difference / (1000 * 3600);
+      if (flights.includes(flight.code) && hoursDifference >= 1) {
         currentFlights.push(flight.code);
       }
     }
