@@ -212,6 +212,6 @@ export class PurchaseService {
         flightCode,
       );
     }
-    return { message: 'Flight cancelled' };
+    return true;
   }
 }

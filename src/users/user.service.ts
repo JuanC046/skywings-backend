@@ -173,7 +173,6 @@ export class UserService {
     const user = await this.prisma.user.findUnique({
       where: { username: username.username },
     });
-    console.log('User finded: ', user);
     if (!user) {
       throw new HttpException('Usuario no encontrado', 404);
     }
