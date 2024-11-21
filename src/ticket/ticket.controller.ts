@@ -38,4 +38,11 @@ export class TicketController {
   async findActiveTickets(@Param('username') username: string): Promise<any> {
     return this.ticketService.findActiveTickets(username);
   }
+  @Get('passenger/:flightCode/:passengerDni')
+  async findPassenger(
+    @Param('flightCode') flightCode: string,
+    @Param('passengerDni') passengerDni: string,
+  ): Promise<any> {
+    return this.ticketService.findPassenger(flightCode, passengerDni);
+  }
 }
