@@ -7,6 +7,10 @@
       {
         "include": "flights/locations/*.json",
         "outDir": "dist"
+      },
+      {
+        "include": "boarding-pass/templates/*.html",
+        "outDir": "dist"
       }
     ],
     "watchAssets": true,

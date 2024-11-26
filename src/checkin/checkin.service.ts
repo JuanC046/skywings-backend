@@ -2,11 +2,13 @@ import { Injectable, HttpException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 import { Checkin } from './interfaces/checkin.interface';
 import { EmailService } from 'src/email/email.service';
+import { BoardingPassService } from 'src/boarding-pass/boarding-pass.service';
 @Injectable()
 export class CheckinService {
   constructor(
     private prismaService: PrismaService,
     private emailService: EmailService,
+    private boardingPassService: BoardingPassService,
   ) {}
   private isTimeToCheckin(flightDeparture: Date): boolean {
     const now = new Date();
@@ -53,7 +55,7 @@ export class CheckinService {
     }
     return true;
   }
-  private async sendEmail(checkin: Checkin) {
+  private async sendEmail(checkin: Checkin, boardingPass: Buffer) {
     const passenger = await this.prismaService.passenger.findUnique({
       where: {
         dni_flightCode: {
@@ -71,6 +73,8 @@ export class CheckinService {
       passenger.email,
       'Checkin realizado',
       `Checkin realizado para el vuelo ${flight.code}`,
+      undefined,
+      boardingPass,
     );
   }
   async checkin(checkin: Checkin) {
@@ -86,7 +90,12 @@ export class CheckinService {
         checkIn: new Date(),
       },
     });
-    await this.sendEmail(checkin);
+    const boardingPass = await this.boardingPassService.generateBoardingPass({
+      name: checkin.passengerDni,
+      flight: checkin.flightCode,
+      seat: '1A',
+    });
+    await this.sendEmail(checkin, boardingPass);
     return 'Checkin realizado';
   }
 }

@@ -19,15 +19,32 @@ transporter.verify((error) => {
 });
 
 export class EmailService {
-  async sendEmail(recipientEmail: string, subject: string, text: string) {
-    const info = await transporter.sendMail({
+  async sendEmail(
+    recipientEmail: string,
+    subject: string,
+    text?: string,
+    html?: string,
+    attachment?: Buffer
+  ) {
+    const mailOptions: any = {
       from: ` "SkyWings Airline" <${process.env.EMAIL_USER}>`, // sender address
       to: recipientEmail, // list of receivers
-      subject: subject, // Subject line
-      text: text, // plain text body
-      // html: '<b>Hello world?</b>', // html body
-    });
-
+      subject, // Subject line
+      text: text || '', // plain text body
+      html: html || '', // html body
+    };
+  
+    if (attachment) {
+      mailOptions.attachments = [
+        {
+          filename: 'pasabordo.pdf',
+          content: attachment,
+        },
+      ];
+    }
+  
+    const info = await transporter.sendMail(mailOptions);
+  
     return info;
   }
 }
