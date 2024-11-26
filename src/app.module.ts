@@ -7,6 +7,7 @@ import { FlightsModule } from './flights/flights.module';
 import { FinancialModule } from './financial/financial.module';
 import { TicketModule } from './ticket/ticket.module';
 import { PurchaseModule } from './purchase/purchase.module';
+import { CheckinModule } from './checkin/checkin.module';
 
 @Module({
   providers: [AppService],
@@ -17,6 +18,7 @@ import { PurchaseModule } from './purchase/purchase.module';
     FinancialModule,
     TicketModule,
     PurchaseModule,
+    CheckinModule,
   ],
   controllers: [AppController],
 })
