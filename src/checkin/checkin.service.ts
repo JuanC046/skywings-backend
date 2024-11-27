@@ -1,35 +1,31 @@
 import { Injectable, HttpException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
-import { Checkin } from './interfaces/checkin.interface';
+import { Checkin, ChangeSeat } from './interfaces/checkin.interface';
 import { EmailService } from 'src/email/email.service';
 import { BoardingPassService } from 'src/boarding-pass/boarding-pass.service';
+import { SeatsService } from 'src/flights/seats.service';
 @Injectable()
 export class CheckinService {
   constructor(
     private prismaService: PrismaService,
     private emailService: EmailService,
     private boardingPassService: BoardingPassService,
+    private seatsService: SeatsService,
   ) {}
+
   private isTimeToCheckin(flightDeparture: Date): boolean {
     const now = new Date();
     const flightDeparute = new Date(flightDeparture);
     const difference = flightDeparute.getTime() - now.getTime();
     const hours = difference / (1000 * 3600);
-    if (hours >= 1) {
-      return true;
-    }
-    return false;
+    return hours >= 1;
   }
 
   private async isCheckinValid(checkin: Checkin) {
-    const ticket = await this.prismaService.ticket.findUnique({
-      where: {
-        flightCode_passengerDni: {
-          flightCode: checkin.flightCode,
-          passengerDni: checkin.passengerDni,
-        },
-      },
-    });
+    const ticket = await this.getTicket(
+      checkin.flightCode,
+      checkin.passengerDni,
+    );
     if (!ticket) {
       throw new HttpException('No existe el ticket', 400);
     }
@@ -42,33 +38,19 @@ export class CheckinService {
         400,
       );
     }
-    const flightDeparture = await this.prismaService.flight.findUnique({
-      where: {
-        code: checkin.flightCode,
-      },
-      select: {
-        departureDate1: true,
-      },
-    });
+    const flightDeparture = await this.getFlight(checkin.flightCode);
     if (!this.isTimeToCheckin(flightDeparture.departureDate1)) {
       throw new HttpException('Has pasado el tiempo de checkin', 400);
     }
     return true;
   }
+
   private async sendEmail(checkin: Checkin, boardingPass: Buffer) {
-    const passenger = await this.prismaService.passenger.findUnique({
-      where: {
-        dni_flightCode: {
-          flightCode: checkin.flightCode,
-          dni: checkin.passengerDni,
-        },
-      },
-    });
-    const flight = await this.prismaService.flight.findUnique({
-      where: {
-        code: checkin.flightCode,
-      },
-    });
+    const passenger = await this.getPassenger(
+      checkin.flightCode,
+      checkin.passengerDni,
+    );
+    const flight = await this.getFlight(checkin.flightCode);
     await this.emailService.sendEmail(
       passenger.email,
       'Checkin realizado',
@@ -77,41 +59,23 @@ export class CheckinService {
       boardingPass,
     );
   }
-  async checkin(checkin: Checkin) {
-    await this.isCheckinValid(checkin);
-    const ticket = await this.prismaService.ticket.update({
-      where: {
-        flightCode_passengerDni: {
-          flightCode: checkin.flightCode,
-          passengerDni: checkin.passengerDni,
-        },
-      },
-      data: {
-        checkIn: new Date(),
-      },
-    });
-    const passenger = await this.prismaService.passenger.findUnique({
-      where: {
-        dni_flightCode: {
-          dni: checkin.passengerDni,
-          flightCode: checkin.flightCode,
-        },
-      },
-    });
-    const flight = await this.prismaService.flight.findUnique({
-      where: {
-        code: checkin.flightCode,
-      },
-    });
+
+  private async generateBoardingPass(checkin: Checkin) {
+    const ticket = await this.updateTicketCheckin(
+      checkin.flightCode,
+      checkin.passengerDni,
+    );
+    const passenger = await this.getPassenger(
+      checkin.flightCode,
+      checkin.passengerDni,
+    );
+    const flight = await this.getFlight(checkin.flightCode);
 
     const boardingPass = await this.boardingPassService.generateBoardingPass({
       passengerName: `${passenger.name1} ${passenger.surname1}`,
       flightCode: flight.code,
-      // select of origin only the city, the word before the comma
       origin: flight.origin.split(',')[0],
-      // select of departure date only the date, the word before T
       departureDate: flight.departureDate1.toISOString().split('T')[0],
-      // select of departure date only the time, the word after T and before the Z
       departureTime: flight.departureDate1
         .toISOString()
         .split('T')[1]
@@ -126,6 +90,103 @@ export class CheckinService {
       suitcases: ticket.numSuitcase.toString(),
     });
     await this.sendEmail(checkin, boardingPass);
+  }
+
+  async checkin(checkin: Checkin) {
+    await this.isCheckinValid(checkin);
+    await this.generateBoardingPass(checkin);
     return 'Checkin realizado';
+  }
+
+  private async isChangeSeatValid(changeSeat: ChangeSeat) {
+    await this.isCheckinValid({
+      flightCode: changeSeat.flightCode,
+      passengerDni: changeSeat.passengerDni,
+    });
+    const ticket = await this.getTicket(
+      changeSeat.flightCode,
+      changeSeat.passengerDni,
+    );
+    if (ticket.seatChanged) {
+      throw new HttpException('Ya has cambiado de asiento', 400);
+    }
+    return true;
+  }
+
+  private async getTicket(flightCode: string, passengerDni: string) {
+    return this.prismaService.ticket.findUnique({
+      where: {
+        flightCode_passengerDni: {
+          flightCode,
+          passengerDni,
+        },
+      },
+    });
+  }
+
+  private async getFlight(flightCode: string) {
+    return this.prismaService.flight.findUnique({
+      where: {
+        code: flightCode,
+      },
+    });
+  }
+
+  private async getPassenger(flightCode: string, passengerDni: string) {
+    return this.prismaService.passenger.findUnique({
+      where: {
+        dni_flightCode: {
+          flightCode,
+          dni: passengerDni,
+        },
+      },
+    });
+  }
+
+  private async updateTicketCheckin(flightCode: string, passengerDni: string) {
+    return this.prismaService.ticket.update({
+      where: {
+        flightCode_passengerDni: {
+          flightCode,
+          passengerDni,
+        },
+      },
+      data: {
+        checkIn: new Date(),
+      },
+    });
+  }
+
+  private async updateTicketSeatChange(
+    flightCode: string,
+    passengerDni: string,
+    newSeat: number,
+  ) {
+    console.log('In updating ticket', flightCode, passengerDni, newSeat);
+    return this.prismaService.ticket.update({
+      where: {
+        flightCode_passengerDni: {
+          flightCode,
+          passengerDni,
+        },
+      },
+      data: {
+        seatChanged: true,
+        seatNumber: newSeat,
+      },
+    });
+  }
+  async changeSeat(changeSeat: ChangeSeat) {
+    await this.isChangeSeatValid(changeSeat);
+    await this.seatsService.changeSeat(
+      changeSeat.flightCode,
+      Number(changeSeat.seatNumber),
+    );
+    await this.updateTicketSeatChange(
+      changeSeat.flightCode,
+      changeSeat.passengerDni,
+      Number(changeSeat.seatNumber),
+    );
+    return 'Asiento cambiado';
   }
 }

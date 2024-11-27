@@ -98,6 +98,20 @@ export class SeatsService {
     return seatNumber;
   }
 
+  async changeSeat(flightCode: string, seatNumber: number) {
+    const seats = await this.findSeatsByFlight(flightCode);
+    const seatClass = seatNumber <= seats.totalFirst ? 'First' : 'Tourist';
+    const { availableSeats: newAvailableSeats, busySeats: newBusySeats } =
+      this.bookingSeat(seatNumber, seatClass, seats);
+    if (seatClass === 'Tourist') {
+      seats.avaliableTourist = newAvailableSeats.toString();
+      seats.busyTourist = newBusySeats.toString();
+    } else {
+      seats.avaliableFirst = newAvailableSeats.toString();
+      seats.busyFirst = newBusySeats.toString();
+    }
+    await this.updateSeats(seats);
+  }
   // private cancelSeat(
   //   seatNumber: number,
   //   seatClass: string,

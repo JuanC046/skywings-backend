@@ -21,24 +21,6 @@ CREATE TABLE "User" (
 );
 
 -- CreateTable
-CREATE TABLE "passenger" (
-    "dni" TEXT NOT NULL,
-    "name1" TEXT NOT NULL,
-    "name2" TEXT NOT NULL,
-    "surname1" TEXT NOT NULL,
-    "surname2" TEXT NOT NULL,
-    "birthdate" TIMESTAMP(3) NOT NULL,
-    "gender" TEXT NOT NULL,
-    "phone" TEXT NOT NULL,
-    "email" TEXT NOT NULL,
-    "contactName" TEXT NOT NULL,
-    "contactPhone" TEXT NOT NULL,
-    "erased" BOOLEAN NOT NULL DEFAULT false,
-
-    CONSTRAINT "passenger_pkey" PRIMARY KEY ("dni")
-);
-
--- CreateTable
 CREATE TABLE "flight" (
     "code" TEXT NOT NULL,
     "creator" TEXT NOT NULL,
@@ -86,16 +68,37 @@ CREATE TABLE "seats" (
 );
 
 -- CreateTable
+CREATE TABLE "passenger" (
+    "dni" TEXT NOT NULL,
+    "flightCode" TEXT NOT NULL,
+    "name1" TEXT NOT NULL,
+    "name2" TEXT,
+    "surname1" TEXT NOT NULL,
+    "surname2" TEXT,
+    "birthdate" TIMESTAMP(3) NOT NULL,
+    "gender" TEXT NOT NULL,
+    "phone" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "contactName" TEXT NOT NULL,
+    "contactPhone" TEXT NOT NULL,
+    "erased" BOOLEAN NOT NULL DEFAULT false,
+
+    CONSTRAINT "passenger_pkey" PRIMARY KEY ("dni","flightCode")
+);
+
+-- CreateTable
 CREATE TABLE "ticket" (
     "flightCode" TEXT NOT NULL,
-    "username" TEXT NOT NULL,
     "passengerDni" TEXT NOT NULL,
+    "username" TEXT NOT NULL,
     "purchaseId" INTEGER NOT NULL DEFAULT 0,
-    "seatNumber" TEXT NOT NULL,
+    "seatNumber" INTEGER NOT NULL,
+    "seatChanged" BOOLEAN NOT NULL DEFAULT false,
     "price" DOUBLE PRECISION NOT NULL,
-    "checkIn" TIMESTAMP(3) NOT NULL,
+    "creationDate" TIMESTAMP(3) NOT NULL,
+    "checkIn" TIMESTAMP(3),
     "numSuitcase" INTEGER NOT NULL,
-    "erased" BOOLEAN NOT NULL DEFAULT false,
+    "erased" BOOLEAN DEFAULT false,
 
     CONSTRAINT "ticket_pkey" PRIMARY KEY ("flightCode","passengerDni")
 );
@@ -114,23 +117,13 @@ CREATE TABLE "cards" (
 );
 
 -- CreateTable
-CREATE TABLE "payments" (
-    "id" SERIAL NOT NULL,
-    "cardNumber" TEXT NOT NULL,
-    "total" INTEGER NOT NULL,
-    "fees" INTEGER,
-    "status" TEXT NOT NULL,
-
-    CONSTRAINT "payments_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
 CREATE TABLE "purchases" (
     "id" SERIAL NOT NULL,
     "username" TEXT NOT NULL,
-    "paymentId" INTEGER NOT NULL,
+    "cardNumber" TEXT NOT NULL,
+    "total" DOUBLE PRECISION NOT NULL,
     "creationDate" TIMESTAMP(3) NOT NULL,
-    "status" TEXT NOT NULL,
+    "status" TEXT,
 
     CONSTRAINT "purchases_pkey" PRIMARY KEY ("id")
 );
@@ -143,9 +136,6 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_dni_key" ON "User"("dni");
-
--- CreateIndex
-CREATE UNIQUE INDEX "passenger_dni_key" ON "passenger"("dni");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "flight_code_key" ON "flight"("code");
@@ -163,25 +153,19 @@ ALTER TABLE "news" ADD CONSTRAINT "news_flightCode_fkey" FOREIGN KEY ("flightCod
 ALTER TABLE "seats" ADD CONSTRAINT "seats_flightCode_fkey" FOREIGN KEY ("flightCode") REFERENCES "flight"("code") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ticket" ADD CONSTRAINT "ticket_flightCode_fkey" FOREIGN KEY ("flightCode") REFERENCES "flight"("code") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "passenger" ADD CONSTRAINT "passenger_flightCode_fkey" FOREIGN KEY ("flightCode") REFERENCES "flight"("code") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ticket" ADD CONSTRAINT "ticket_flightCode_passengerDni_fkey" FOREIGN KEY ("flightCode", "passengerDni") REFERENCES "passenger"("flightCode", "dni") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "ticket" ADD CONSTRAINT "ticket_username_fkey" FOREIGN KEY ("username") REFERENCES "User"("username") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ticket" ADD CONSTRAINT "ticket_passengerDni_fkey" FOREIGN KEY ("passengerDni") REFERENCES "passenger"("dni") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "ticket" ADD CONSTRAINT "ticket_purchaseId_fkey" FOREIGN KEY ("purchaseId") REFERENCES "purchases"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "cards" ADD CONSTRAINT "cards_propietary_fkey" FOREIGN KEY ("propietary") REFERENCES "User"("dni") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "payments" ADD CONSTRAINT "payments_cardNumber_fkey" FOREIGN KEY ("cardNumber") REFERENCES "cards"("number") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "purchases" ADD CONSTRAINT "purchases_username_fkey" FOREIGN KEY ("username") REFERENCES "User"("username") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "purchases" ADD CONSTRAINT "purchases_paymentId_fkey" FOREIGN KEY ("paymentId") REFERENCES "payments"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "purchases" ADD CONSTRAINT "purchases_cardNumber_fkey" FOREIGN KEY ("cardNumber") REFERENCES "cards"("number") ON DELETE RESTRICT ON UPDATE CASCADE;

@@ -5,6 +5,7 @@ export interface Ticket {
   username: string;
   purchaseId?: number;
   seatNumber: number;
+  seatChanged?: boolean;
   price: number;
   creationDate: Date;
   checkIn?: Date;

@@ -6,5 +6,5 @@ export interface Checkin {
 export interface ChangeSeat {
   flightCode: string;
   passengerDni: string;
-  seat: string;
+  seatNumber: string;
 }

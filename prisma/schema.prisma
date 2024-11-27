@@ -107,6 +107,7 @@ model ticket { // Usar tiket ID y poner la referencia en pasajero id incremental
   username          String
   purchaseId        Int @default(0)
   seatNumber        Int
+  seatChanged       Boolean @default(false)
   price             Float
   creationDate      DateTime
   checkIn           DateTime?
