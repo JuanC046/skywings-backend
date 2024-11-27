@@ -79,7 +79,7 @@ export class CheckinService {
   }
   async checkin(checkin: Checkin) {
     await this.isCheckinValid(checkin);
-    await this.prismaService.ticket.update({
+    const ticket = await this.prismaService.ticket.update({
       where: {
         flightCode_passengerDni: {
           flightCode: checkin.flightCode,
@@ -90,10 +90,40 @@ export class CheckinService {
         checkIn: new Date(),
       },
     });
+    const passenger = await this.prismaService.passenger.findUnique({
+      where: {
+        dni_flightCode: {
+          dni: checkin.passengerDni,
+          flightCode: checkin.flightCode,
+        },
+      },
+    });
+    const flight = await this.prismaService.flight.findUnique({
+      where: {
+        code: checkin.flightCode,
+      },
+    });
+
     const boardingPass = await this.boardingPassService.generateBoardingPass({
-      name: checkin.passengerDni,
-      flight: checkin.flightCode,
-      seat: '1A',
+      passengerName: `${passenger.name1} ${passenger.surname1}`,
+      flightCode: flight.code,
+      // select of origin only the city, the word before the comma
+      origin: flight.origin.split(',')[0],
+      // select of departure date only the date, the word before T
+      departureDate: flight.departureDate1.toISOString().split('T')[0],
+      // select of departure date only the time, the word after T and before the Z
+      departureTime: flight.departureDate1
+        .toISOString()
+        .split('T')[1]
+        .split('.')[0],
+      destination: flight.destination.split(',')[0],
+      arrivalDate: flight.arrivalDate1.toISOString().split('T')[0],
+      arrivalTime: flight.arrivalDate1
+        .toISOString()
+        .split('T')[1]
+        .split('.')[0],
+      seatNumber: ticket.seatNumber,
+      suitcases: ticket.numSuitcase.toString(),
     });
     await this.sendEmail(checkin, boardingPass);
     return 'Checkin realizado';

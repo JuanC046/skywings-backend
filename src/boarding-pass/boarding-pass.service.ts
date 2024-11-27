@@ -5,11 +5,7 @@ import * as path from 'path';
 
 @Injectable()
 export class BoardingPassService {
-  async generateBoardingPass(data: {
-    name: string;
-    flight: string;
-    seat: string;
-  }): Promise<Buffer> {
+  async generateBoardingPass(data: any): Promise<Buffer> {
     const browser = await puppeteer.launch({
       headless: true,
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
@@ -27,9 +23,16 @@ export class BoardingPassService {
 
     // Reemplazar variables en la plantilla
     html = html
-      .replace('{{name}}', data.name)
-      .replace('{{flight}}', data.flight)
-      .replace('{{seat}}', data.seat);
+      .replace('{{passengerName}}', data.passengerName)
+      .replace('{{flightCode}}', data.flightCode)
+      .replace('{{origin}}', data.origin)
+      .replace('{{departureDate}}', data.departureDate)
+      .replace('{{departureTime}}', data.departureTime)
+      .replace('{{destination}}', data.destination)
+      .replace('{{arrivalDate}}', data.arrivalDate)
+      .replace('{{arrivalTime}}', data.arrivalTime)
+      .replace('{{seatNumber}}', data.seatNumber)
+      .replace('{{suitcases}}', data.suitcases);
 
     // Configurar el contenido HTML
     await page.setContent(html, { waitUntil: 'networkidle0' });

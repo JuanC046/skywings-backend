@@ -9,7 +9,7 @@
         "outDir": "dist"
       },
       {
-        "include": "boarding-pass/templates/*.html",
+        "include": "boarding-pass/templates/*",
         "outDir": "dist"
       }
     ],

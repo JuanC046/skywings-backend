@@ -1,37 +1,103 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Boarding Pass</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 20px;
-    }
-    .header {
-      background-color: #0044cc;
-      color: white;
-      padding: 10px;
-      text-align: center;
-    }
-    .details {
-      margin: 20px 0;
-    }
-    .details p {
-      margin: 5px 0;
-    }
-  </style>
-</head>
-<body>
-  <div class="header">
-    <h1>Boarding Pass</h1>
-  </div>
-  <div class="details">
-    <p><strong>Name:</strong> {{name}}</p>
-    <p><strong>Flight:</strong> {{flight}}</p>
-    <p><strong>Seat:</strong> {{seat}}</p>
-  </div>
-</body>
+<!doctype html>
+<html>
+  <head>
+    <title>Boarding Pass</title>
+    <style>
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+        background-color: #f8f8f8;
+        color: #011b3d;
+        margin: 0;
+        padding: 0;
+      }
+      h1 {
+        text-align: center;
+        color: #011b3d;
+      }
+      h2,
+      h3 {
+        color: #011b3d;
+      }
+      ul {
+        list-style-type: none;
+        padding: 0;
+      }
+      li {
+        margin: 5px 0;
+      }
+      .icon {
+        font-size: 24px;
+      }
+      header {
+        display: flex;
+        justify-content: center;
+        text-align: center;
+        background-color: #e5e9ff;
+        border-radius: 10px;
+      }
+      header img {
+        max-width: 100%;
+      }
+      
+      .data-head {
+        margin: 32px;
+        text-align: center;
+        padding: 4px;
+      }
+      .info {
+        display: flex;
+        justify-content: space-around;
+        margin: 20px 0;
+      }
+      .data {
+        display: inline;
+        text-align: center;
+        align-items: center;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>SkyWings ✈️</h1>
+    </header>
+    <div class="data-head">
+      <h2>Pasabordo</h2>
+      <h3>{{passengerName}}</h3>
+      <h3>{{flightCode}}</h3>
+    </div>
+    <hr />
+    <div class="info">
+      <div class="data">
+        <h3>Salida</h3>
+        <ul>
+          <li>{{origin}}</li>
+          <li>{{departureDate}}</li>
+          <li>{{departureTime}}</li>
+        </ul>
+      </div>
+      <div class="data">
+        <h3>Llegada</h3>
+        <ul>
+          <li>{{destination}}</li>
+          <li>{{arrivalDate}}</li>
+          <li>{{arrivalTime}}</li>
+        </ul>
+      </div>
+    </div>
+    <hr />
+    <div class="info">
+      <div class="data">
+        <h3>Asiento</h3>
+        <ul>
+          <li>{{seatNumber}}</li>
+        </ul>
+      </div>
+      <div class="data">
+        <h3>Equipaje</h3>
+        <ul>
+          <li>🧳 {{suitcases}}</li>
+        </ul>
+      </div>
+    </div>
+  </body>
 </html>
