@@ -62,7 +62,7 @@ export class UserService {
     if (existingEmail) {
       throw new HttpException('Correo electrónico en uso', 409);
     }
-    
+
     const password = this.generateRandomPassword();
 
     const msg = await this.emailService.sendEmail(
@@ -106,7 +106,14 @@ export class UserService {
       throw new HttpException('Usuario no encontrado', 404);
     }
     // Verificar si la contraseña actual es correcta
-    const validPassword = await bcrypt.compare(currentPassword, user.password);
+    let currentHashedPassword = user.password;
+    if (!currentHashedPassword.startsWith('$2b$')) {
+      currentHashedPassword = await bcrypt.hash(user.password, 10);
+    }
+    const validPassword = await bcrypt.compare(
+      currentPassword,
+      currentHashedPassword,
+    );
     if (!validPassword) {
       throw new HttpException(
         'La contraseña actual ingresada es incorrecta',
