@@ -18,7 +18,7 @@ export class CheckinService {
     const flightDeparute = new Date(flightDeparture);
     const difference = flightDeparute.getTime() - now.getTime();
     const hours = difference / (1000 * 3600);
-    return hours >= 1;
+    return hours <= 5 && hours >= 1;
   }
 
   private async isCheckinValid(checkin: Checkin) {
@@ -40,7 +40,10 @@ export class CheckinService {
     }
     const flightDeparture = await this.getFlight(checkin.flightCode);
     if (!this.isTimeToCheckin(flightDeparture.departureDate1)) {
-      throw new HttpException('Has pasado el tiempo de checkin', 400);
+      throw new HttpException(
+        'El checkin debe realizarce minimo 1 y máximo 5 horas antes de la salida del vuelo',
+        400,
+      );
     }
     return true;
   }

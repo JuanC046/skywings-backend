@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, UseGuards } from '@nestjs/common';
 import { PurchaseService } from './purchase.service';
 import {
   PurchasesData,
@@ -6,7 +6,13 @@ import {
   TicketId,
 } from './interfaces/purchase.interface';
 import { ApiTags } from '@nestjs/swagger';
+import { AuthGuard } from '../auth/guard/auth.guard';
+import { RolesGuard } from '../auth/guard/auth.roles.guard';
+import { Roles } from '../auth/decorator/roles.decorator';
+import { Role } from '../auth/decorator/roles.enum';
 
+@UseGuards(AuthGuard, RolesGuard)
+@Roles(Role.User)
 @ApiTags('purchase')
 @Controller('purchase')
 export class PurchaseController {
@@ -30,6 +36,8 @@ export class CancelTicketController {
     return this.purchaseService.cancelTicket(ticketId);
   }
 }
+@UseGuards(AuthGuard, RolesGuard)
+@Roles(Role.Admin)
 @Controller('flights')
 export class CancelFlightController {
   constructor(private readonly purchaseService: PurchaseService) {}

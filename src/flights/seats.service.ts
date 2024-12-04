@@ -57,7 +57,10 @@ export class SeatsService {
       seatsByType =
         seatClass === 'Tourist' ? seats.busyTourist : seats.busyFirst;
     }
-    return seatsByType.split(',').map((i) => parseInt(i));
+    return seatsByType
+      .split(',')
+      .filter((i) => i)
+      .map((i) => parseInt(i));
   }
 
   private bookingSeat(

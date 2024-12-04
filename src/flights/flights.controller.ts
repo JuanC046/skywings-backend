@@ -5,7 +5,6 @@ import {
   Body,
   Param,
   Patch,
-  Delete,
   UseGuards, // Se implementará luego
 } from '@nestjs/common';
 import { FlightsService } from './flights.service';
@@ -35,20 +34,20 @@ export class FlightsController {
   ): Promise<any> {
     return this.flightsService.findFlightByCode(flightCode);
   }
-  // @UseGuards(AuthGuard, RolesGuard)
-  // @Roles(Role.Admin)
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.Admin)
   @Get('realized')
   async findRealizedFlights(): Promise<any> {
     return this.flightsService.findFlightsRealized();
   }
-  // @UseGuards(AuthGuard, RolesGuard)
-  // @Roles(Role.Admin)
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.Admin)
   @Post('create')
   async newFlight(@Body() flightData: any): Promise<any> {
     return this.flightsService.createFlight(flightData);
   }
-  // @UseGuards(AuthGuard, RolesGuard)
-  // @Roles(Role.Admin)
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.Admin)
   @Patch('update')
   async updateFlight(@Body() flightData: any): Promise<any> {
     return this.flightsService.changeFlightPrice(flightData);
