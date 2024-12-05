@@ -284,6 +284,9 @@ export class FlightsService {
       departureDate1,
       timeZone,
     );
+    // Delete old news
+    await this.newsService.deleteNews(code);
+    // Create new news
     await this.newsService.createNew({
       flightCode: code,
       title: `¡Nuevos precios!`,
