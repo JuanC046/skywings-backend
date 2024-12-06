@@ -98,7 +98,10 @@ export class CheckinService {
   async checkin(checkin: Checkin) {
     await this.isCheckinValid(checkin);
     await this.generateBoardingPass(checkin);
-    return 'Checkin realizado';
+    return {
+      statusCode: 200,
+      message: 'Checkin realizado',
+    };
   }
 
   private async isChangeSeatValid(changeSeat: ChangeSeat) {
@@ -166,7 +169,7 @@ export class CheckinService {
     newSeat: number,
   ) {
     console.log('In updating ticket', flightCode, passengerDni, newSeat);
-    return this.prismaService.ticket.update({
+    await this.prismaService.ticket.update({
       where: {
         flightCode_passengerDni: {
           flightCode,
@@ -190,6 +193,9 @@ export class CheckinService {
       changeSeat.passengerDni,
       Number(changeSeat.seatNumber),
     );
-    return 'Asiento cambiado';
+    return {
+      statusCode: 200,
+      message: 'Cambio de asiento exitoso',
+    };
   }
 }
