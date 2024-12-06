@@ -9,7 +9,8 @@ export class BoardingPassService {
     const browser = await puppeteer.launch({
       headless: true,
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
-      executablePath: puppeteer.executablePath(),
+      executablePath:
+        '/opt/render/.cache/puppeteer/chrome/linux-131.0.6778.85/chrome-linux64/chrome',
     });
     console.log('Puppeteer executable path:', puppeteer.executablePath());
     const page = await browser.newPage();
