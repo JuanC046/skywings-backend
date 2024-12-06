@@ -5,7 +5,7 @@
   "compilerOptions": {
     "assets": [
       {
-        "include": "flights/locations/*.json",
+        "include": "flights/locations/*",
         "outDir": "dist"
       },
       {
