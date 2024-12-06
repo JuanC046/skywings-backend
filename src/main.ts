@@ -8,7 +8,7 @@ async function bootstrap() {
     console.log(`Request... ${req.method} ${req.url}`);
     next();
   });
-  console.log('Server is running on http://localhost:4000');
+  // console.log('Server is running on http://localhost:4000');
   const config = new DocumentBuilder()
     .setTitle('Skywings API')
     .setDescription('The Skywings API description')
@@ -17,6 +17,9 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
   app.enableCors();
-  await app.listen(4000);
+  const port = process.env.PORT || 4000;
+  await app.listen(port, () => {
+    console.log(`App listening on port ${port}`);
+  });
 }
 bootstrap();
