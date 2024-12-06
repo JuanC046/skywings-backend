@@ -1,48 +1,85 @@
 import { Injectable } from '@nestjs/common';
-import * as puppeteer from 'puppeteer';
-import * as fs from 'fs';
+import * as PDFDocument from 'pdfkit';
 import * as path from 'path';
 
 @Injectable()
 export class BoardingPassService {
   async generateBoardingPass(data: any): Promise<Buffer> {
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-      executablePath:
-        '/opt/render/.cache/puppeteer/chrome/linux-131.0.6778.85/chrome-linux64/chrome',
+    // Crear un nuevo documento PDF
+    const doc = new PDFDocument({ size: 'A4', margin: 50 });
+
+    // Buffer para almacenar el PDF
+    const chunks: Buffer[] = [];
+    doc.on('data', (chunk) => chunks.push(chunk));
+    doc.on('end', () => {
+      console.log('PDF generado');
     });
-    console.log('Puppeteer executable path:', puppeteer.executablePath());
-    const page = await browser.newPage();
 
-    // Leer la plantilla HTML
-    const templatePath = path.join(
-      __dirname,
-      'templates',
-      'boarding-pass-template.html',
+    // Encabezado
+    const imagePath = path.join(__dirname, './templates/skywings.png');
+    const image = doc.openImage(imagePath);
+    const pageWidth =
+      doc.page.width - doc.page.margins.left - doc.page.margins.right;
+    const scale = pageWidth / image.width;
+
+    doc.image(imagePath, {
+      fit: [pageWidth, image.height * scale],
+      align: 'center',
+      valign: 'top',
+    });
+    doc.moveDown(8);
+    doc
+      .fontSize(20)
+      .text('Pasabordo', { align: 'center', underline: true })
+      .moveDown(2);
+
+    const boldItalicText = (label: string, value: string) => {
+      doc
+        .font('Helvetica-Bold')
+        .text(label, { continued: true })
+        .font('Helvetica-Oblique')
+        .text(value);
+    };
+
+    // Información del pasajero y vuelo
+    doc.fontSize(12).lineGap(6);
+    boldItalicText('Nombre del pasajero: ', data.passengerName);
+    doc.moveDown(0.5);
+    boldItalicText('Código de vuelo: ', data.flightCode);
+    doc.moveDown(0.5);
+    boldItalicText('Origen: ', data.origin);
+    doc.moveDown(0.5);
+    boldItalicText('Destino: ', data.destination);
+    doc.moveDown(2);
+
+    // Información de salida y llegada
+    doc.fontSize(12).lineGap(6);
+    boldItalicText(
+      'Fecha y hora de salida: ',
+      `${data.departureDate}  ${data.departureTime}`,
     );
-    let html = fs.readFileSync(templatePath, 'utf8');
+    doc.moveDown(0.5);
+    boldItalicText(
+      'Fecha y hora de llegada: ',
+      `${data.arrivalDate}  ${data.arrivalTime}`,
+    );
+    doc.moveDown(2);
+    boldItalicText('Número de asiento: ', data.seatNumber);
+    doc.moveDown(0.5);
+    boldItalicText('Equipaje: ', data.suitcases);
+    doc.moveDown(3);
 
-    // Reemplazar variables en la plantilla
-    html = html
-      .replace('{{passengerName}}', data.passengerName)
-      .replace('{{flightCode}}', data.flightCode)
-      .replace('{{origin}}', data.origin)
-      .replace('{{departureDate}}', data.departureDate)
-      .replace('{{departureTime}}', data.departureTime)
-      .replace('{{destination}}', data.destination)
-      .replace('{{arrivalDate}}', data.arrivalDate)
-      .replace('{{arrivalTime}}', data.arrivalTime)
-      .replace('{{seatNumber}}', data.seatNumber)
-      .replace('{{suitcases}}', data.suitcases);
+    // Pie de página
+    doc
+      .fontSize(10)
+      .text('¡Gracias por volar con nosotros!', { align: 'center' });
 
-    // Configurar el contenido HTML
-    await page.setContent(html, { waitUntil: 'networkidle0' });
+    // Finalizar el documento
+    doc.end();
 
-    // Generar el PDF
-    const pdfBuffer = await page.pdf({ format: 'A4', printBackground: true });
-    console.log('PDF generado');
-    await browser.close();
-    return Buffer.from(pdfBuffer);
+    // Retornar el PDF como un buffer
+    return new Promise((resolve) => {
+      doc.on('end', () => resolve(Buffer.concat(chunks)));
+    });
   }
 }
