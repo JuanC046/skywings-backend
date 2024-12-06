@@ -1,10 +1,8 @@
-import { Controller, Body, Post, Get, Param, UseGuards } from '@nestjs/common';
+import { Controller, Body, Post, Get, Param } from '@nestjs/common';
 import { TicketService } from './ticket.service';
 import { TicketsData } from './interfaces/ticket.interface';
 import { ApiTags } from '@nestjs/swagger';
-import { AuthGuard } from '../auth/guard/auth.guard';
-import { RolesGuard } from '../auth/guard/auth.roles.guard';
-@UseGuards(AuthGuard, RolesGuard)
+
 @ApiTags('tickets')
 @Controller('tickets')
 export class TicketController {
