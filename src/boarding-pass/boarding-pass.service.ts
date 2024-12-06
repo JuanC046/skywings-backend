@@ -9,6 +9,7 @@ export class BoardingPassService {
     const browser = await puppeteer.launch({
       headless: true,
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      executablePath: puppeteer.executablePath(), // Usa el ejecutable instalado.
     });
 
     const page = await browser.newPage();
